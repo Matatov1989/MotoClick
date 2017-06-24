@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?android:attr/selectableItemBackground"
+    android:clickable="true"
+    android:gravity="left"
+    android:orientation="horizontal"
+    android:paddingBottom="@dimen/padding_small"
+    android:paddingEnd="@dimen/padding_avg"
+    android:paddingStart="@dimen/padding_avg"
+    android:paddingTop="@dimen/padding_small">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:background="@drawable/roundedmessages"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/textNameSender"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="left"
+            android:paddingLeft="@dimen/padding_small"
+            android:textColor="#FF5252"
+            android:textStyle="bold"
+            tools:text="a" />
+
+        <TextView
+            android:id="@+id/textMessageSender"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/padding_small"
+            android:layout_gravity="left"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textColor="@color/grey_100"
+            tools:text="Hello mate ! \ntest" />
+
+    </LinearLayout>
+</LinearLayout>
