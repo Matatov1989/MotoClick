@@ -65,14 +65,11 @@
         </service>
 
 
-        <!--
-         AIzaSyAVaOAW8R94s1z1tSUs-npeoGF94JtH8rE  release
-         AIzaSyCiF9MlWaWlOfMk6BBHE6vWy7Yl3ggveSc  bug
-         -->
+      
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyCiF9MlWaWlOfMk6BBHE6vWy7Yl3ggveSc" />
+            android:value="" />
 
 
     </application>
