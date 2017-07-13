@@ -9,8 +9,8 @@
     android:gravity="right"
     android:orientation="horizontal"
     android:paddingBottom="@dimen/padding_small"
-    android:paddingEnd="@dimen/padding_avg"
-    android:paddingStart="@dimen/padding_avg"
+    android:paddingEnd="0dp"
+    android:paddingStart="0dp"
     android:paddingTop="@dimen/padding_small">
 
     <TextView
@@ -18,10 +18,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="right"
+        android:textColor="@color/colorBlack"
         android:background="@drawable/roundedmessagescolored"
         android:padding="@dimen/padding_small"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textColor="@color/grey_100"
         tools:text="Noice man !" />
 
 </LinearLayout>

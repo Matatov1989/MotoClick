@@ -30,6 +30,7 @@ import android.util.Log;
 public class LocationGPS extends Service implements LocationListener {
     final String LOG_TAG = "myLogs";
     private final Context mContext;
+    private boolean flagWay = false;
 
     // flag for GPS status
     boolean isGPSEnabled = false;
@@ -55,6 +56,12 @@ public class LocationGPS extends Service implements LocationListener {
 
     public LocationGPS(Context context) {
         this.mContext = context;
+        getLocation();
+    }
+
+    public LocationGPS(Context context, boolean flagWay) {
+        this.mContext = context;
+        this.flagWay = flagWay;
         getLocation();
     }
 
@@ -86,7 +93,7 @@ public class LocationGPS extends Service implements LocationListener {
                         if (location != null) {
                             latitude = location.getLatitude();
                             longitude = location.getLongitude();
-                            Log.d(LOG_TAG, "local net"+location);
+                            Log.d(LOG_TAG, "local net" + location);
                         }
                     }
                 }
@@ -102,9 +109,8 @@ public class LocationGPS extends Service implements LocationListener {
                             if (location != null) {
                                 latitude = location.getLatitude();
                                 longitude = location.getLongitude();
-                                Log.d(LOG_TAG, "local gps "+location);
-                            }
-                            else {
+                                Log.d(LOG_TAG, "local gps " + location);
+                            } else {
                                 Log.d(LOG_TAG, "local gps NULL");
                                 location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
@@ -125,18 +131,18 @@ public class LocationGPS extends Service implements LocationListener {
     /**
      * Stop using GPS listener
      * Calling this function will stop using GPS in your app
-     * */
-    public void stopUsingGPS(){
-        if(locationManager != null){
+     */
+    public void stopUsingGPS() {
+        if (locationManager != null) {
             locationManager.removeUpdates(LocationGPS.this);
         }
     }
 
     /**
      * Function to get latitude
-     * */
-    public double getLatitude(){
-        if(location != null){
+     */
+    public double getLatitude() {
+        if (location != null) {
             latitude = location.getLatitude();
         }
 
@@ -146,9 +152,9 @@ public class LocationGPS extends Service implements LocationListener {
 
     /**
      * Function to get longitude
-     * */
-    public double getLongitude(){
-        if(location != null){
+     */
+    public double getLongitude() {
+        if (location != null) {
             longitude = location.getLongitude();
         }
 
@@ -158,8 +164,9 @@ public class LocationGPS extends Service implements LocationListener {
 
     /**
      * Function to check GPS/wifi enabled
+     *
      * @return boolean
-     * */
+     */
     public boolean canGetLocation() {
         return this.canGetLocation;
     }
@@ -167,8 +174,8 @@ public class LocationGPS extends Service implements LocationListener {
     /**
      * Function to show settings alert dialog
      * On pressing Settings button will lauch Settings Options
-     * */
-    public void showSettingsAlert(){
+     */
+    public void showSettingsAlert() {
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(mContext);
 
         // Setting Dialog Title
@@ -179,7 +186,7 @@ public class LocationGPS extends Service implements LocationListener {
 
         // On pressing Settings button
         alertDialog.setPositiveButton("Settings", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog,int which) {
+            public void onClick(DialogInterface dialog, int which) {
                 Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
                 mContext.startActivity(intent);
             }
@@ -198,7 +205,7 @@ public class LocationGPS extends Service implements LocationListener {
 
     @Override
     public void onLocationChanged(Location location) {
-        Log.d(LOG_TAG, "onLocationChanged " +location);
+        Log.d(LOG_TAG, "onLocationChanged " + location);
     }
 
     @Override

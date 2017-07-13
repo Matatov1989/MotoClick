@@ -24,4 +24,10 @@ public class PrivacyPolicyActivity extends AppCompatActivity {
         // указываем страницу загрузки
         mWebView.loadUrl("https://sites.google.com/view/motoclick-privacypolicy");
     }
+/*
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        startActivity(new Intent(PrivacyPolicyActivity.this, MapsActivity.class));
+    }*/
 }

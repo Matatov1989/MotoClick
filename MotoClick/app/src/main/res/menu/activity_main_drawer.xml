@@ -9,12 +9,8 @@
             android:title="@string/navStatus" />
         <item
             android:id="@+id/nav_instructions"
-            android:icon="@drawable/ic_nav_instructions"
+            android:icon="@drawable/ic_nav_instr"
             android:title="@string/navInstructions" />
-        <item
-            android:id="@+id/nav_settings"
-            android:icon="@drawable/ic_nav_settings"
-            android:title="@string/navSettings" />
 
         <item
             android:id="@+id/nav_advise_friend"
@@ -22,14 +18,20 @@
             android:title="@string/navAdviseFriend" />
         <item
             android:id="@+id/nav_about_program"
-            android:icon="@drawable/ic_nav_info"
+            android:icon="@drawable/ic_nav_instructions"
             android:title="@string/navAboutProgram" />
 
+        <item
+            android:id="@+id/nav_feedback"
+            android:icon="@android:drawable/btn_star"
+            android:title="@string/navFeedback" />
+
+<!--
         <item
             android:id="@+id/nav_from_developer"
             android:icon="@drawable/ic_nav_more"
             android:title="@string/navFromDeveloper" />
-
+-->
         <item
             android:id="@+id/nav_link_fb"
             android:icon="@drawable/ic_nav_facebook"

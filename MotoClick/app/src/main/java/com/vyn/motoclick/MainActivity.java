@@ -152,8 +152,6 @@ public class MainActivity extends AppCompatActivity
             //        dialogStatus();
         } else if (id == R.id.nav_instructions) {
             //        dialogInstructions();
-        } else if (id == R.id.nav_settings) {
-
         } else if (id == R.id.nav_advise_friend) {
             //advise to friends
             Intent sendIntent = new Intent();

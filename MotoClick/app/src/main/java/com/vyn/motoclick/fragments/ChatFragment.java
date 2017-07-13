@@ -34,6 +34,7 @@ import java.util.ArrayList;
  */
 
 public class ChatFragment extends Fragment implements ChatContract.View, TextView.OnEditorActionListener {
+    final String LOG_TAG = "myLogs";
     private RecyclerView mRecyclerViewChat;
     private EditText mETxtMessage;
 
@@ -79,7 +80,8 @@ public class ChatFragment extends Fragment implements ChatContract.View, TextVie
 
         btnSendMsg.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                sendMessage();
+                if (!mETxtMessage.getText().toString().isEmpty())
+                    sendMessage();
             }
         });
         return fragmentView;
@@ -88,6 +90,7 @@ public class ChatFragment extends Fragment implements ChatContract.View, TextVie
     private void bindViews(View view) {
         mRecyclerViewChat = (RecyclerView) view.findViewById(R.id.recycler_view_chat);
         mETxtMessage = (EditText) view.findViewById(R.id.edit_text_message);
+
     }
 
     @Override
@@ -141,7 +144,7 @@ public class ChatFragment extends Fragment implements ChatContract.View, TextVie
     @Override
     public void onSendMessageSuccess() {
         mETxtMessage.setText("");
-    //    Toast.makeText(getActivity(), "Message sent", Toast.LENGTH_SHORT).show();
+        //    Toast.makeText(getActivity(), "Message sent", Toast.LENGTH_SHORT).show();
     }
 
     @Override

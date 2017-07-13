@@ -7,68 +7,75 @@
     <string name="action_settings">Settings</string>
     <string name="title_activity_maps">Map</string>
 
-    <string name="hint_type_message">Type a message...</string>
+    <string name="hintTypeMessage">Type a message...</string>
 
     <string name="loading">Loading</string>
     <string name="please_wait">Please wait...</string>
 
 
-    <string name="markerSnippet">Ты</string>
+    <string name="markerSnippet">You</string>
 
-    <string name="statusHome">дома</string>
-    <string name="statusWay">в пути</string>
+    <string name="statusHome">home</string>
+    <string name="statusWay">in way</string>
     <string name="statusSOS">SOS</string>
-    <string name="statusFriends">с друзьями</string>
-    <string name="statusWant">хочу кататься</string>
+    <string name="statusFriends">with friends</string>
+    <string name="statusWant">I want to ride</string>
 
-    <string name="toastAuthFailed">Ошибка аутентификации.</string>
-    <string name="toastAuthFinish">Авторизации завершена.</string>
+    <string name="toastAuthFailed">Authentication failed.</string>
+    <string name="toastAuthFinish">Authorization complete.</string>
 
-    <string name="titleStatus">Статусы</string>
-    <string name="titleInstruction">Инструкция</string>
+    <string name="titleStatus">Statuses</string>
+    <string name="titleInstruction">Instructions</string>
 
     <string name="btnOK">OK</string>
-    <string name="btnCancel">отмена</string>
-    <string name="btnContact">связаться</string>
-    <string name="btnWay">маршрут</string>
-    <string name="btnEditProfile">Изменить профиль</string>
-    <string name="btnPrivacyPolicy"><b><u>политика конфиденциальности</u></b>\n\n</string>
+    <string name="btnCancel">Cancel</string>
+    <string name="btnContact">contact</string>
+    <string name="btnWay">route</string>
+    <string name="btnPrivacyPolicy"><b><u>Privacy Policy</u></b>\n\n</string>
 
 
-    <string name="textStatus">статус:</string>
+    <string name="textStatus">status:</string>
     <string name="textEmail">e-mail:</string>
-
-    <string name="navStatus">Статусы</string>
-    <string name="navInstructions">Инструкция</string>
-    <string name="navSettings">Настройки</string>
-    <string name="navAdviseFriend">Посоветовать друзьям</string>
-    <string name="navAboutProgram">О программе</string>
-    <string name="navFromDeveloper">Еще от разработчика</string>
-    <string name="navLinkFb">Группа в facebook</string>
+    <string name="textVersion">Version: 1.2.0</string>
+    <string name="textGroupFacebook">Our Group</string>
+    <string name="textWorkersProject">Work on the project</string>
 
 
-    <string name="dialogProgress">Пожалуйста подождите\nзавершения авторизации</string>
-    <string name="dialogAuth">\t\tАвторизуйтесь пожалуйста!\n
-    \t\tЭто необходимо для использования чата и карты программы.\n
-    \t\tАвторизовавшись Вы соглашаетесь с нашей политикой конфиденциальности, и подтверждаете условия использования программы: Ваш электронный адрес, имя и фамилия которое записано в Вашем аккаунте электронного адреса, и месторасположения будут использоваться в программе.\n
+    <string name="navStatus">Statuses</string>
+    <string name="navInstructions">Instructions</string>
+    <string name="navAdviseFriend">Recommend to friends</string>
+    <string name="navAboutProgram">About the program</string>
+    <string name="navFromDeveloper">More from developer</string>
+    <string name="navLinkFb">Group in facebook</string>
+    <string name="navFeedback">Feedback</string>
+
+
+    <string name="dialogProgress">Please wait\ncompletion of authorization</string>
+
+    <string name="dialogAuth">\t\tPlease Log in!\n
+    \t\tIn order to use the chat and map of the program it is necessary for you to log in.\n
+    \t\tBy login into the program you agree to our privacy policy and terms of use of the program: Your email address, name and surname that are written in your email account, and your location will be used in the program.\n
     </string>
 
-    <string name="dialogInstruction">\t\tДобро пожаловать в MotoClick!!!\n\n
-        \t\tПрограмма предназначена для помощи мотоциклистам в пути, или на отдыхе. А так же в поиске новых знакомств по общему интересу – Мотоциклы!!!!\n\n
-        \t\tПри запуске программы устройство определяет Ваше месторасположение для того что бы отметить Вас на карте. Тем самым с Вами могут связаться ближайшие или мимо проезжающие мотоциклисты, которые так же пользуются этой программой.\n\n
-        \t\tВ программе предусмотрены статусы:\n
-        \t\t\t1)Хочу кататься;\n
-        \t\t\t2)В пути;\n
-        \t\t\t3)Дома;\n
+    <string name="dialogInstruction">\t\tWelcome to MotoClick!!!\n\n
+        \t\tThe program is intended to help motorcyclists on the road, or on vacation. Moreover, you can find friends with the common interest which is – bikes!!!\n\n
+        \t\tWhen starting the app your location is determined by your device and marked on the map. This way, nearest or passing by motorcyclists who also use this program will be able to contact you.\n\n
+        \t\tThe program provides statuses such as:\n
+        \t\t\t1)Want to ride;\n
+        \t\t\t2)On the way\n
+        \t\t\t3)At home;\n
         \t\t\t4)Sos;\n
-        \t\t\t5)С друзьями;\n\n
-        \t\tУказав статус Вы показываете на карте другим участникам программы Ваше состояние на текущее время.\n\n
-        \t\tВ программке предусмотрен chat-room и прокладка маршрута. Для того чтобы связаться с другим мотоциклистом или проложить до него маршрут, Вам нужно просто выбрать мотоциклиста на карте и выбрать нужную Вам функцию.\n\n
-        \t\tСпасибо что выбрали нас!!!\n\n
-        \t\tПользуйтесь, комментируйте, пишите свои пожелания в комментариях или лично нам!!! Давайте вместе сделаем программу лучше!!!\n\n
+        \t\t\t5)With friends;\n\n
+        \t\tChoosing a status shows your current condition for the present time.\n\n
+        \t\tThe program includes a chat room and a route builder. In order to contact other motorcyclists or to build your way to him, you need to simply mark the chosen motorcyclist on the map and select your desired function.\n\n
+        \t\tThanks for choosing us!!!\n\n
+        \t\tUse, comment and write your suggestions in the comments or personally to us!! Let\'s make the app better together!!!\n\n
     </string>
 
-    <string name="dialogPermissionLocation">Программа использует функцию определения местоположения устройства. Это необходимо для определения Вашего местоположения для того что бы пользователи программы могли видеть Вас и связаться с Вами. За определение местоположения телефона может взиматься дополнительная плата. Подробности Вы можете узнать у Вашего сотового оператора.</string>
+    <string name="dialogPermissionLocation">The app uses the device\'s GPS to determine the location of the device. It is necessary to determine your location so that the users of the program can see you and contact you. The location of the phone may be subject to an additional charge. For details, contact your mobile operator.</string>
 
+    <string name="worker1">Victor Konarev</string>
+    <string name="worker2">Nikita Matatov</string>
+    <string name="worker3">Yury Matatov</string>
 
 </resources>

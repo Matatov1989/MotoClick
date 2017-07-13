@@ -36,11 +36,11 @@
         <EditText
             android:id="@+id/edit_text_message"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="1"
             android:layout_alignParentBottom="true"
             android:background="@drawable/roundedmessages"
-            android:hint="type a message"
+            android:hint="@string/hintTypeMessage"
             android:imeOptions="actionSend"
             android:inputType="text"
             android:maxLines="5"
@@ -55,7 +55,7 @@
             android:layout_gravity="center"
             android:background="@drawable/btn"
             android:gravity="center"
-            android:src="@drawable/ic_menu_send" />
+            android:src="@drawable/ic_btn_send" />
 
     </LinearLayout>
 </LinearLayout>
