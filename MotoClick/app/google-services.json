@@ -1,0 +1,63 @@
+{
+  "project_info": {
+    "project_number": "860457813183",
+    "firebase_url": "https://motoclick-802af.firebaseio.com",
+    "project_id": "motoclick-802af",
+    "storage_bucket": "motoclick-802af.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:860457813183:android:dd33996c280bab13",
+        "android_client_info": {
+          "package_name": "com.vyn.motoclick"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "860457813183-en0mado3cg9kelstnbbl9pnfo19fjkmv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.vyn.motoclick",
+            "certificate_hash": "2088f949155c074a7a14041cded2d5934f822758"
+          }
+        },
+        {
+          "client_id": "860457813183-ad2l607khmjltjgdq6e3mn41o435uilf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.vyn.motoclick",
+            "certificate_hash": "5cf2d03a5d11bf536f784f503f84701c1e84e01a"
+          }
+        },
+        {
+          "client_id": "860457813183-ftsdfbkkrpvag07hfa3b3etdhk8ggp66.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBhjsmCKC-IiNx4fIarz7aMv93C70Y2ts4"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "860457813183-ftsdfbkkrpvag07hfa3b3etdhk8ggp66.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

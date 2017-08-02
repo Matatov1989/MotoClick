@@ -27,6 +27,15 @@
             app:civ_border_color="#FF000000"
             app:civ_border_width="2dp" />
 
+        <TextView
+            android:id="@+id/settingsUser"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="right"
+            android:text="@string/btnEditProfile" />
+
+
     </LinearLayout>
 
     <TextView

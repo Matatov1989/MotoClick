@@ -11,15 +11,22 @@ import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 import com.vyn.motoclick.R;
 import com.vyn.motoclick.activities.ChatActivity;
 import com.vyn.motoclick.activities.MapsActivity;
+import com.vyn.motoclick.database.User;
 import com.vyn.motoclick.events.PushNotificationEvent;
 import com.vyn.motoclick.utils.Constants;
 
 import org.greenrobot.eventbus.EventBus;
+
+import java.util.Iterator;
 
 /**
  * Created by Yurka on 15.06.2017.
@@ -27,6 +34,7 @@ import org.greenrobot.eventbus.EventBus;
 
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
     final String LOG_TAG = "myLogs";
+    String nameSender;
     /**
      * Called when message is received.
      *
@@ -44,15 +52,20 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         // Check if message contains a data payload.
         if (remoteMessage.getData().size() > 0) {
-            Log.d(LOG_TAG, "if   " );
             String title = remoteMessage.getData().get("title");
             String message = remoteMessage.getData().get("text");
             String username = remoteMessage.getData().get("username");
             String uid = remoteMessage.getData().get("uid");
             String fcmToken = remoteMessage.getData().get("fcm_token");
 
+    //        username = getOneUserFromFirebase(uid);
+
+            getOneUserFromFirebase(uid);
+
+
             // Don't show notification if chat activity is open.
             if (!MapsActivity.isChatActivityOpen()) {
+
                 sendNotification(title,
                         message,
                         username,
@@ -94,13 +107,10 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         long[] vibrate = new long[] { 0, 300, 200, 300, 200, 300 };
-
-        Log.d(LOG_TAG, "sendNotification title "+title );
-        Log.d(LOG_TAG, "sendNotification  receiver "+receiver );
-
+        Log.d(LOG_TAG, "NotificationCompat   " +nameSender);
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentTitle(receiver)
+          //      .setContentTitle(receiver)
                 .setContentText(message)
                 .setNumber(4)
                 .setAutoCancel(true)
@@ -113,5 +123,30 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
 
         notificationManager.notify(101, notificationBuilder.build());
+    }
+
+    public void getOneUserFromFirebase(final String uidUser) {
+        FirebaseDatabase.getInstance().getReference().child(Constants.ARG_USERS).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Iterator<DataSnapshot> dataSnapshots = dataSnapshot.getChildren().iterator();
+                //     users = new ArrayList<>();
+                while (dataSnapshots.hasNext()) {
+                    DataSnapshot dataSnapshotChild = dataSnapshots.next();
+                    User user = dataSnapshotChild.getValue(User.class);
+
+                    if (uidUser.equals(user.getUid())) {
+
+                        nameSender = user.getNameUser();
+                        Log.d(LOG_TAG, "sms getOneUserFromFirebase " + nameSender );
+
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+        });
     }
 }

@@ -1,5 +1,7 @@
 package com.vyn.motoclick.fcm;
 
+import android.util.Log;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -12,13 +14,15 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+
 /**
  * Created by Yurka on 15.06.2017.
  */
 
 public class FcmNotificationBuilder {
+    final String LOG_TAG = "myLogs";
     public static final MediaType MEDIA_TYPE_JSON = MediaType.parse("application/json; charset=utf-8");
-    private static final String SERVER_API_KEY = "API";
+    private static final String SERVER_API_KEY = "kay from firebase";
     private static final String CONTENT_TYPE = "Content-Type";
     private static final String APPLICATION_JSON = "application/json";
     private static final String AUTHORIZATION = "Authorization";
@@ -87,6 +91,7 @@ public class FcmNotificationBuilder {
             e.printStackTrace();
         }
 
+        Log.d(LOG_TAG, "FCM " + requestBody.toString());
         Request request = new Request.Builder()
                 .addHeader(CONTENT_TYPE, APPLICATION_JSON)
                 .addHeader(AUTHORIZATION, AUTH_KEY)
@@ -109,7 +114,6 @@ public class FcmNotificationBuilder {
     private JSONObject getValidJsonBody() throws JSONException {
         JSONObject jsonObjectBody = new JSONObject();
         jsonObjectBody.put(KEY_TO, mReceiverFirebaseToken);
-
         JSONObject jsonObjectData = new JSONObject();
         jsonObjectData.put(KEY_TITLE, mTitle);
         jsonObjectData.put(KEY_TEXT, mMessage);

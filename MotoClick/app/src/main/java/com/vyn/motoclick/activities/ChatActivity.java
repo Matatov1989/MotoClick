@@ -5,16 +5,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
-
-import com.vyn.motoclick.R;
-import com.vyn.motoclick.fragments.ChatFragment;
-import com.vyn.motoclick.utils.Constants;
-
-import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
 import com.vyn.motoclick.R;
@@ -79,5 +69,11 @@ public class ChatActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         //     MainActivity.setChatActivityOpen(false);
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        startActivity(new Intent(ChatActivity.this, MapsActivity.class));
     }
 }

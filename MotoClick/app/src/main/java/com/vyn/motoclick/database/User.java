@@ -12,11 +12,13 @@ public class User {
     public String location;
     public String nameUser;
     public String status;
+    public String phone;
+    public String moto;
 
     public User(){
     }
 
-    public User(String uid, String email, String firebaseToken, String uriPhoto, String location, String nameUser, String status){
+    public User(String uid, String email, String firebaseToken, String uriPhoto, String location, String nameUser, String status, String phone, String moto){
         this.uid = uid;
         this.email = email;
         this.firebaseToken = firebaseToken;
@@ -24,6 +26,8 @@ public class User {
         this.location = location;
         this.nameUser = nameUser;
         this.status = status;
+        this.phone = phone;
+        this.moto = moto;
     }
 
     public String getUid() {
@@ -54,6 +58,14 @@ public class User {
         return status;
     }
 
+    public String getPhone() {
+        return phone;
+    }
+
+    public String getMoto() {
+        return moto;
+    }
+
     public void setUid(String uid) {
         this.uid = uid;
     }
@@ -80,5 +92,13 @@ public class User {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public void setMoto(String moto) {
+        this.moto = moto;
     }
 }

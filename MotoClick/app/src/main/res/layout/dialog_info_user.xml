@@ -22,17 +22,23 @@
         />
 
     <TextView
-        android:id="@+id/textMailUser"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/textEmail"
-        android:textColor="@color/colorBlack"/>
-
-    <TextView
         android:id="@+id/textStatusUser"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/textStatus"
         android:textColor="@color/colorBlack"/>
 
+    <TextView
+        android:id="@+id/textMotoUser"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/textMoto"
+        android:textColor="@color/colorBlack"/>
+
+    <TextView
+        android:id="@+id/textPhoneUser"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/textPhone"
+        android:textColor="@color/colorBlack"/>
 </LinearLayout>

@@ -21,18 +21,12 @@
 
     <!-- Needed only if your app targets Android 5.0 (API level 21) or higher. -->
     <uses-feature android:name="android.hardware.location.gps" />
-
-
-
 <!--
-    <permission
-        android:name="com.example.android.permission.MAPS_RECEIVE"
-        android:protectionLevel="signature" />
--->
     <permission
         android:name="package_name.permission.MAPS_RECEIVE"
         android:protectionLevel="signature"/>
     <uses-permission android:name="package_name.permission.MAPS_RECEIVE"/>
+    -->
 
 
     <application
@@ -100,7 +94,7 @@
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="API" />
+            android:value="your key" />
 
     </application>
 
