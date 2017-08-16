@@ -9,7 +9,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -96,11 +95,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     String myStatus;
     String local;
 
+    TextView deleteAccount;
+
     String statusUser;
 
     boolean flagSelectFoto = false;
 
-    Dialog dialog;
+    Dialog dialog, dialog1;
     LocationGPS locationGPS;
 
     String[] arrStatus;
@@ -124,8 +125,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private SignInButton signInButton;
     private TextView btnPrivacyPolicy;
-
- //   int positionStatus = 0;
 
     private static final int RC_SIGN_IN = 9001;
     private static final int REQUEST = 1;
@@ -194,19 +193,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         else {
             FirebaseAuth.getInstance().getCurrentUser().getUid();
             local = getLocation();
-
             getOneUserFromFirebase(FirebaseAuth.getInstance().getCurrentUser().getUid().toString());
-
-            settingsUser.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    settingsUser.setTextColor(Color.RED);
-                    dialogSettingsUser();
-                }
-            });
             users = new ArrayList<>();
             getAllUsersFromFirebase();
         }
+
+        settingsUser.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                settingsUser.setTextColor(getResources().getColor(R.color.colorWhiteDark));
+                dialogSettingsUser();
+            }
+        });
     }
 
     @Override
@@ -236,7 +234,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 img = MediaStore.Images.Media.getBitmap(getContentResolver(), selectedImage);
                 imageProf.setImageBitmap(img);
                 flagSelectFoto = true;
-                Log.d(LOG_TAG, "3 ");
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -246,11 +243,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void dialogSettingsUser() {
-        Log.d(LOG_TAG, "dialogSettingsUser ");
         LayoutInflater adbInflater = LayoutInflater.from(MapsActivity.this);
         View v = adbInflater.inflate(R.layout.dialog_settings_user, null);
 
         imageProf = (ImageView) v.findViewById(R.id.imageUser);
+        deleteAccount = (TextView) v.findViewById(R.id.btnDeleteAccount);
 
         TextInputLayout tilName = (TextInputLayout) v.findViewById(R.id.textInputLayoutName);
         final EditText editName = (EditText) tilName.findViewById(R.id.editTextName);
@@ -260,9 +257,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         TextInputLayout tilMoto = (TextInputLayout) v.findViewById(R.id.textInputLayoutMoto);
         final EditText editMoto = (EditText) tilMoto.findViewById(R.id.editTextMoto);
-
-        Log.d(LOG_TAG, "1 dialogSettingsUser " + myPhoto);
-    //    Log.d(LOG_TAG, "dialogSettingsUser " + myName);
 
         Picasso.with(this)
                 .load(myPhoto)
@@ -277,12 +271,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         editPhone.setSelection(editPhone.getText().toString().length());
         editMoto.setSelection(editMoto.getText().toString().length());
 
-        AlertDialog.Builder adb = new AlertDialog.Builder(MapsActivity.this);
+        final AlertDialog.Builder adb = new AlertDialog.Builder(MapsActivity.this);
         adb.setCancelable(true);
         adb.setView(v);
         adb.setPositiveButton(R.string.btnSave, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
-                Log.d(LOG_TAG, "4 " );
                 if (editName.length() != 0) {
                     if (flagSelectFoto == true) {
                         Log.d(LOG_TAG, "5 ");
@@ -292,42 +285,102 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         uploadPickInFirebase(FirebaseAuth.getInstance().getCurrentUser());
                         flagSelectFoto = false;
                     } else {
-                        Log.d(LOG_TAG, "7 dialogSettingsUser foto" + myPhoto);
                         updateUserToDatabase(MapsActivity.this, FirebaseAuth.getInstance().getCurrentUser(), editName.getText().toString(), myPhoto, myStatus, editPhone.getText().toString(), editMoto.getText().toString());
                         getOneUserFromFirebase(FirebaseAuth.getInstance().getCurrentUser().getUid().toString());
                         textUserName.setText(myName);
                     }
-                    settingsUser.setTextColor(Color.WHITE);
-                    dialog.dismiss();
-                }
-                else {
+                    settingsUser.setTextColor(getResources().getColor(R.color.colorWhite));
+                    dialog1.dismiss();
+                } else {
                     Toast toast = Toast.makeText(getApplicationContext(),
                             R.string.toastEnterName,
                             Toast.LENGTH_SHORT);
                     toast.setGravity(Gravity.CENTER, 0, 0);
                     toast.show();
-               //     Toast.makeText(MapsActivity.this, R.string.toastEnterName, Toast.LENGTH_SHORT).setGravity(Gravity.CENTER, 0, 0).show();
                     dialogSettingsUser();
                 }
             }
         });
         adb.setNegativeButton(R.string.btnCancel, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
-                settingsUser.setTextColor(Color.WHITE);
-                dialog.dismiss();
+                settingsUser.setTextColor(getResources().getColor(R.color.colorWhite));
+                dialog1.dismiss();
             }
         });
 
-        dialog = adb.show();
+        dialog1 = adb.show();
 
         //chang foto
         imageProf.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d(LOG_TAG, "2 " );
                 Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
                 photoPickerIntent.setType("image/*");
                 startActivityForResult(photoPickerIntent, REQUEST);
+            }
+        });
+
+        deleteAccount.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                deleteAccount.setTextColor(getResources().getColor(R.color.colorWhiteDark));
+                dialogDelAccount();
+            }
+        });
+    }
+
+    private void dialogDelAccount() {
+        AlertDialog.Builder adb = new AlertDialog.Builder(this);
+        adb.setCancelable(true);
+        adb.setMessage(R.string.dialogDelAccount);
+        adb.setPositiveButton(R.string.btnOK, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+                dialog1.dismiss();
+                deleteAccount();
+                myName = "";
+                myPhone = "";
+                myMoto = "";
+                myPhoto = myPhone + "1";
+                myStatus = "";
+
+                Picasso.with(MapsActivity.this)
+                        .load(myPhoto)
+                        .error(R.mipmap.ic_launcher)
+                        .into(imageUser);
+
+                textUserName.setText("");
+                textUserStatus.setText(R.string.textStatus);
+                settingsUser.setVisibility(View.INVISIBLE);
+
+            }
+        });
+        adb.setNeutralButton(R.string.btnCancel, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                deleteAccount.setTextColor(getResources().getColor(R.color.colorBlack));
+                dialog.dismiss();
+            }
+        });
+        dialog = adb.show();
+    }
+
+    private void deleteAccount() {
+        FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
+        final FirebaseUser currentUser = firebaseAuth.getCurrentUser();
+        currentUser.delete().addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                if (task.isSuccessful()) {
+                    Toast toast = Toast.makeText(getApplicationContext(),
+                            R.string.toastDelAccount,
+                            Toast.LENGTH_SHORT);
+                    toast.setGravity(Gravity.CENTER, 0, 0);
+                    toast.show();
+                    dialog.dismiss();
+                } else {
+                    Toast.makeText(MapsActivity.this, R.string.toastDelAccountError, Toast.LENGTH_SHORT).show();
+                    deleteAccount.setTextColor(getResources().getColor(R.color.colorBlack));
+                }
             }
         });
     }
@@ -346,21 +399,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
                         if (task.isSuccessful()) {
                             myPhoto = task.getResult().getDownloadUrl().toString();
-                //            updateUserFotoToDatabase(MapsActivity.this, FirebaseAuth.getInstance().getCurrentUser(),uriPhotoUser);
-                 //           updateUserToDatabase(MapsActivity.this, FirebaseAuth.getInstance().getCurrentUser(), nameDisplayUser, uriPhotoUser, status);
+                            //            updateUserFotoToDatabase(MapsActivity.this, FirebaseAuth.getInstance().getCurrentUser(),uriPhotoUser);
+                            //           updateUserToDatabase(MapsActivity.this, FirebaseAuth.getInstance().getCurrentUser(), nameDisplayUser, uriPhotoUser, status);
 
                             updateUserToDatabase(MapsActivity.this, FirebaseAuth.getInstance().getCurrentUser(), myName, myPhoto, myStatus, myPhone, myMoto);
                             getOneUserFromFirebase(FirebaseAuth.getInstance().getCurrentUser().getUid().toString());
 
                             textUserName.setText(myName);
-                            Log.d(LOG_TAG, "6 uploadPickInFirebase " + myPhoto);
-             //               Log.d(LOG_TAG, "uploadPickInFirebase " + nameDisplayUser);
-
 
                             Picasso.with(MapsActivity.this)
                                     .load(task.getResult().getDownloadUrl())
                                     .error(R.mipmap.ic_launcher)
                                     .into(imageUser);
+
                             hideProgressDialog(getText(R.string.toastPickFinish).toString());
                         } else {
                             task.getException();
@@ -370,7 +421,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     public void updateUserToDatabase(final Context context, FirebaseUser firebaseUser, String name, String photo, String status, String phone, String moto) {
-        Log.d(LOG_TAG, "8 updateUserToDatabase " + photo);
         DatabaseReference database = FirebaseDatabase.getInstance().getReference();
         User user = new User(firebaseUser.getUid(),
                 firebaseUser.getEmail(),
@@ -423,19 +473,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             statusUser = users.get(i).getStatus();
                             switch (Integer.parseInt(statusUser)) {
                                 case 0:
-                                    mMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon)).snippet("" + i).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_status_want)));
+                                    mMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon)).snippet("" + i).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_status_home)));
                                     break;
                                 case 1:
-                                    mMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon)).snippet("" + i).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_status_way)));
+                                    mMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon)).snippet("" + i).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_status_want)));
                                     break;
                                 case 2:
-                                    mMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon)).snippet("" + i).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_status_sos)));
+                                    mMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon)).snippet("" + i).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_status_way)));
                                     break;
                                 case 3:
-                                    mMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon)).snippet("" + i).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_status_friends)));
+                                    mMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon)).snippet("" + i).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_status_sos)));
                                     break;
                                 case 4:
-                                    mMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon)).snippet("" + i).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_status_home)));
+                                    mMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon)).snippet("" + i).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_status_friends)));
                                     break;
                             }
                         }
@@ -461,25 +511,26 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         } else {
                             switch (Integer.parseInt(myStatus)) {
                                 case 0:
-                                    textUserStatus.setText(getText(R.string.textStatus) + " " + getText(R.string.statusWant));
-                                    mMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon)).snippet(getText(R.string.markerSnippet).toString()).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_status_want)));
-                                    break;
-                                case 1:
-                                    textUserStatus.setText(getText(R.string.textStatus) + " " + getText(R.string.statusWay));
-                                    mMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon)).snippet(getText(R.string.markerSnippet).toString()).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_status_way)));
-                                    break;
-                                case 2:
-                                    textUserStatus.setText(getText(R.string.textStatus) + " " + getText(R.string.statusSOS));
-                                    mMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon)).snippet(getText(R.string.markerSnippet).toString()).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_status_sos)));
-                                    break;
-                                case 3:
-                                    textUserStatus.setText(getText(R.string.textStatus) + " " + getText(R.string.statusFriends));
-                                    mMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon)).snippet(getText(R.string.markerSnippet).toString()).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_status_friends)));
-                                    break;
-                                case 4:
                                     textUserStatus.setText(getText(R.string.textStatus) + " " + getText(R.string.statusHome));
                                     mMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon)).snippet(getText(R.string.markerSnippet).toString()).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_status_home)));
                                     break;
+                                case 1:
+                                    textUserStatus.setText(getText(R.string.textStatus) + " " + getText(R.string.statusWant));
+                                    mMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon)).snippet(getText(R.string.markerSnippet).toString()).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_status_want)));
+                                    break;
+                                case 2:
+                                    textUserStatus.setText(getText(R.string.textStatus) + " " + getText(R.string.statusWay));
+                                    mMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon)).snippet(getText(R.string.markerSnippet).toString()).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_status_way)));
+                                    break;
+                                case 3:
+                                    textUserStatus.setText(getText(R.string.textStatus) + " " + getText(R.string.statusSOS));
+                                    mMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon)).snippet(getText(R.string.markerSnippet).toString()).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_status_sos)));
+                                    break;
+                                case 4:
+                                    textUserStatus.setText(getText(R.string.textStatus) + " " + getText(R.string.statusFriends));
+                                    mMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon)).snippet(getText(R.string.markerSnippet).toString()).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_status_friends)));
+                                    break;
+
                             }
                             //вид на карту
                             CameraPosition cameraPosition = new CameraPosition.Builder()
@@ -513,7 +564,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 public boolean onMarkerClick(Marker arg0) {
                     if (!arg0.getSnippet().toString().equals(getText(R.string.markerSnippet))) {
                         int position = Integer.parseInt(arg0.getSnippet());
-                        dialogInfoUser(users.get(position).getNameUser(), Integer.parseInt(users.get(position).getStatus()), users.get(position).getUriPhoto(), users.get(position).getMoto(), users.get(position).getPhone(),position);
+                        dialogInfoUser(users.get(position).getNameUser(), Integer.parseInt(users.get(position).getStatus()), users.get(position).getUriPhoto(), users.get(position).getMoto(), users.get(position).getPhone(), position);
                     }
                     return true;
                 }
@@ -533,6 +584,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     public void getOneUserFromFirebase(final String uidUser) {
+        Log.d(LOG_TAG, "getOneUserFromFirebase " + uidUser);
         FirebaseDatabase.getInstance().getReference().child(Constants.ARG_USERS).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -541,7 +593,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 while (dataSnapshots.hasNext()) {
                     DataSnapshot dataSnapshotChild = dataSnapshots.next();
                     User user = dataSnapshotChild.getValue(User.class);
-
+                    Log.d(LOG_TAG, "getOneUserFromFirebase  uidUser       " + uidUser);
+                    Log.d(LOG_TAG, "getOneUserFromFirebase  user.getUid() " + user.getUid());
                     if (uidUser.equals(user.getUid())) {
 
                         myName = user.getNameUser();
@@ -550,15 +603,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         myMoto = user.getMoto();
                         myPhone = user.getPhone();
 
-                        Log.d(LOG_TAG, "9 getOneUserFromFirebase " + myPhoto);
-                  //      Log.d(LOG_TAG, "getOneUserFromFirebase " + nameDisplayUser);
-                 //       Log.d(LOG_TAG, "getOneUserFromFirebase " + myStatus);
+
+                        Log.d(LOG_TAG, "getOneUserFromFirebase 1 " + myPhoto);
+
 
                         Picasso.with(MapsActivity.this)
                                 .load(myPhoto)
                                 .error(R.mipmap.ic_launcher)
                                 .into(imageUser);
 
+                        Log.d(LOG_TAG, "getOneUserFromFirebase 2 " + myPhoto);
                         textUserName.setText(myName);
                     }
                 }
@@ -566,6 +620,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
+                Log.d(LOG_TAG, "getOneUserFromFirebase  onCancelled " + databaseError.toString());
             }
         });
     }
@@ -580,6 +635,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     DataSnapshot dataSnapshotChild = dataSnapshots.next();
                     User user = dataSnapshotChild.getValue(User.class);
                     users.add(user);
+/*
+                    Log.d(LOG_TAG, "getAllUsersFromFirebase " + user.getNameUser());
+                    Log.d(LOG_TAG, "getAllUsersFromFirebase *" + user.getMoto()+"*");
+                    Log.d(LOG_TAG, "getAllUsersFromFirebase " + user.getUriPhoto());
+                    Log.d(LOG_TAG, "getAllUsersFromFirebase " + user.getStatus());*/
                 }
                 SupportMapFragment mapFragment =
                         (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
@@ -617,8 +677,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         btnPrivacyPolicy.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                btnPrivacyPolicy.setTextColor(Color.RED);
-                startActivity(new Intent(MapsActivity.this, PrivacyPolicyActivity.class));
+                btnPrivacyPolicy.setTextColor(getResources().getColor(R.color.colorWhiteDark));
+                startActivity(new Intent(MapsActivity.this, PrivacyPolicyActivity.class).putExtra("flagExit", "maps"));
             }
         });
     }
@@ -628,7 +688,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         startActivityForResult(authorizeIntent, RC_SIGN_IN);
     }
 
-    private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
+    private void firebaseAuthWithGoogle(final GoogleSignInAccount acct) {
         showProgressDialog(getText(R.string.dialogProgressAuth).toString());
         AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
         mAuth.signInWithCredential(credential)
@@ -636,14 +696,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-
                             local = getLocation();
                             addUserToDatabase(MapsActivity.this, task.getResult().getUser(), local, "0");
-
+                            getOneUserFromFirebase(task.getResult().getUser().getUid());
                             dialog.dismiss();
                             getAllUsersFromFirebase();
-
-                            hideProgressDialog(getText(R.string.toastAuthFailed).toString());
+                            hideProgressDialog(getText(R.string.toastAuthFinish).toString());
                         } else {
                             Toast.makeText(MapsActivity.this, R.string.toastAuthFailed, Toast.LENGTH_SHORT).show();
                         }
@@ -695,19 +753,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private void dialogStatus() {
 
         arrStatus = new String[]{
+                getText(R.string.statusHome).toString(),
                 getText(R.string.statusWant).toString(),
                 getText(R.string.statusWay).toString(),
                 getText(R.string.statusSOS).toString(),
                 getText(R.string.statusFriends).toString(),
-                getText(R.string.statusHome).toString(),
         };
 
         Integer[] imgid = {
+                R.drawable.ic_status_home,
                 R.drawable.ic_status_want,
                 R.drawable.ic_status_way,
                 R.drawable.ic_status_sos,
                 R.drawable.ic_status_friends,
-                R.drawable.ic_status_home,
         };
 
         LayoutInflater adbInflater = LayoutInflater.from(MapsActivity.this);
@@ -737,33 +795,32 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 switch (position) {
                     case 0:
                         myStatus = "0";
-                        textUserStatus.setText(R.string.statusWant);
+                        textUserStatus.setText(R.string.statusHome);
                         locationGPS.stopUsingGPS();
                         break;
                     case 1:
                         myStatus = "1";
-                        textUserStatus.setText(R.string.statusWay);
-                        locationGPS = new LocationGPS(MapsActivity.this, true);
+                        textUserStatus.setText(R.string.statusWant);
+                        locationGPS.stopUsingGPS();
                         break;
                     case 2:
                         myStatus = "2";
-                        textUserStatus.setText(R.string.statusSOS);
-                        locationGPS.stopUsingGPS();
+                        textUserStatus.setText(R.string.statusWay);
+                        locationGPS = new LocationGPS(MapsActivity.this, true);
                         break;
                     case 3:
                         myStatus = "3";
-                        textUserStatus.setText(R.string.statusFriends);
+                        textUserStatus.setText(R.string.statusSOS);
                         locationGPS.stopUsingGPS();
                         break;
                     case 4:
                         myStatus = "4";
-                        textUserStatus.setText(R.string.statusHome);
+                        textUserStatus.setText(R.string.statusFriends);
                         locationGPS.stopUsingGPS();
                         break;
-                }
-                //        ww addUserToDatabase(MapsActivity.this, FirebaseAuth.getInstance().getCurrentUser(), local, status);
-                updateUserToDatabase(MapsActivity.this, FirebaseAuth.getInstance().getCurrentUser(), myName, myPhoto, myStatus, myPhone, myMoto);
 
+                }
+                updateUserToDatabase(MapsActivity.this, FirebaseAuth.getInstance().getCurrentUser(), myName, myPhoto, myStatus, myPhone, myMoto);
                 getAllUsersFromFirebase();
                 dialog.dismiss();
             }
@@ -796,7 +853,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         adb.setItems(arrGroups, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int item) {
-
                 switch (item) {
                     case 0:
                         Uri address = Uri.parse("https://m.facebook.com/IsraelTypicalMoto");
@@ -805,7 +861,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         dialog.dismiss();
                         break;
                     case 1:
-                        address = Uri.parse("https://m.facebook.com/CollectAllMotorcyclists");
+                        address = Uri.parse("https://m.facebook.com/UniteAllMotorcyclists");
                         openlink = new Intent(Intent.ACTION_VIEW, address);
                         startActivity(openlink);
                         dialog.dismiss();
@@ -824,13 +880,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         dialogImageUser = (ImageView) v.findViewById(R.id.imageUser);
         dialogNameUser = (TextView) v.findViewById(R.id.textNameUser);
-   //     dialogMailUser = (TextView) v.findViewById(R.id.textMailUser);
+        //     dialogMailUser = (TextView) v.findViewById(R.id.textMailUser);
         dialogStatusUser = (TextView) v.findViewById(R.id.textStatusUser);
         dialogMotoUser = (TextView) v.findViewById(R.id.textMotoUser);
         dialogPhoneUser = (TextView) v.findViewById(R.id.textPhoneUser);
-
-        //     Log.d(LOG_TAG, "dialogInfoUser " + uriPhotoUser);
-   //     Log.d(LOG_TAG, "dialogInfoUser " + nameDisplayUser);
 
         Picasso.with(this)
                 .load(uriPhoto)
@@ -838,26 +891,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .into(dialogImageUser);
 
         dialogNameUser.setText(name);
-  //      dialogMailUser.setText(dialogMailUser.getText().toString() + " " + mail);
+        //      dialogMailUser.setText(dialogMailUser.getText().toString() + " " + mail);
         dialogMotoUser.setText(dialogMotoUser.getText().toString() + " " + moto);
         dialogPhoneUser.setText(dialogPhoneUser.getText().toString() + " " + phone);
 
         switch (status) {
             case 0:
-                dialogStatusUser.setText(dialogStatusUser.getText().toString() + " " + getText(R.string.statusWant));
-                break;
-            case 1:
-                dialogStatusUser.setText(dialogStatusUser.getText().toString() + " " + getText(R.string.statusWay));
-                break;
-            case 2:
-                dialogStatusUser.setText(dialogStatusUser.getText().toString() + " " + getText(R.string.statusSOS));
-                break;
-            case 3:
-                dialogStatusUser.setText(dialogStatusUser.getText().toString() + " " + getText(R.string.statusFriends));
-                break;
-            case 4:
                 dialogStatusUser.setText(dialogStatusUser.getText().toString() + " " + getText(R.string.statusHome));
                 break;
+            case 1:
+                dialogStatusUser.setText(dialogStatusUser.getText().toString() + " " + getText(R.string.statusWant));
+                break;
+            case 2:
+                dialogStatusUser.setText(dialogStatusUser.getText().toString() + " " + getText(R.string.statusWay));
+                break;
+            case 3:
+                dialogStatusUser.setText(dialogStatusUser.getText().toString() + " " + getText(R.string.statusSOS));
+                break;
+            case 4:
+                dialogStatusUser.setText(dialogStatusUser.getText().toString() + " " + getText(R.string.statusFriends));
+                break;
+
         }
 
         AlertDialog.Builder adb = new AlertDialog.Builder(MapsActivity.this);
@@ -938,7 +992,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         int id = item.getItemId();
 
         if (id == R.id.nav_status) {
-            dialogStatus();
+            if (!textUserName.getText().equals(""))
+                dialogStatus();
+            else
+                Toast.makeText(MapsActivity.this, R.string.toasNotAuth, Toast.LENGTH_SHORT).show();
+
         } else if (id == R.id.nav_instructions) {
             dialogInstructions();
         } else if (id == R.id.nav_advise_friend) {
@@ -962,7 +1020,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             if ("iw".equals(getResources().getConfiguration().locale.getLanguage())) {
                 dialogGroupFacebook();
             } else {
-                Uri address = Uri.parse("https://m.facebook.com/CollectAllMotorcyclists");
+                Uri address = Uri.parse("https://m.facebook.com/UniteAllMotorcyclists");
                 Intent openlink = new Intent(Intent.ACTION_VIEW, address);
                 startActivity(openlink);
             }

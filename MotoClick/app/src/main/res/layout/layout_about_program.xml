@@ -89,6 +89,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:textSize="10sp"
+            android:textColor="@color/colorBlack"
             android:text="@string/btnPrivacyPolicy"/>
 
     </LinearLayout>

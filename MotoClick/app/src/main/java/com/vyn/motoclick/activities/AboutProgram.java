@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -22,9 +21,7 @@ public class AboutProgram extends AppCompatActivity {
     TextView btnGroupFacebook;
     TextView btnPrivacyPolicy;
     TextView btnWorkers;
-
     Dialog dialog;
-
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,55 +31,49 @@ public class AboutProgram extends AppCompatActivity {
         btnPrivacyPolicy = (TextView) findViewById(R.id.btnPrivacyPolicy);
         btnWorkers = (TextView) findViewById(R.id.btnWorkers);
 
-
         btnPrivacyPolicy.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                btnPrivacyPolicy.setTextColor(Color.RED);
-
-                startActivity(new Intent(AboutProgram.this, PrivacyPolicyActivity.class));
-                btnPrivacyPolicy.setTextColor(Color.BLACK);
-
+                btnPrivacyPolicy.setTextColor(getResources().getColor(R.color.colorWhiteDark));
+                startActivity(new Intent(AboutProgram.this, PrivacyPolicyActivity.class).putExtra("flagExit", "aboutProgram"));
             }
         });
-
 
         btnGroupFacebook.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                btnGroupFacebook.setTextColor(Color.RED);
+                btnGroupFacebook.setTextColor(getResources().getColor(R.color.colorWhiteDark));
 
                 //открыть ссылку в браузере
-                //      Log.d(LOG_TAG, "язык: " +getResources().getConfiguration().locale.getLanguage());
                 if ("iw".equals(getResources().getConfiguration().locale.getLanguage())) {
                     dialogGroupFacebook();
                 } else {
-                    Uri address = Uri.parse("https://m.facebook.com/CollectAllMotorcyclists");
+                    Uri address = Uri.parse("https://m.facebook.com/UniteAllMotorcyclists");
                     Intent openlink = new Intent(Intent.ACTION_VIEW, address);
                     startActivity(openlink);
                 }
-                btnGroupFacebook.setTextColor(Color.BLACK);
             }
         });
 
         btnWorkers.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                btnWorkers.setTextColor(Color.RED);
+                btnWorkers.setTextColor(getResources().getColor(R.color.colorWhiteDark));
                 dialogWorkers();
-                btnWorkers.setTextColor(Color.BLACK);
-
+                btnWorkers.setTextColor(getResources().getColor(R.color.colorBlack));
             }
         });
+    }
 
+    protected void onResume() {
+        super.onResume();
+        btnGroupFacebook.setTextColor(getResources().getColor(R.color.colorBlack));
     }
 
     private void dialogWorkers() {
         final String[] developers = {getString(R.string.worker1), getString(R.string.worker2), getString(R.string.worker3)};
 
         AlertDialog.Builder adb = new AlertDialog.Builder(this);
-        //     adb.setTitle(getString(R.string.developers));
-        //      adb.setIcon(android.R.drawable.ic_dialog_info);
         adb.setItems(developers, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int item) {
@@ -123,11 +114,9 @@ public class AboutProgram extends AppCompatActivity {
         };
         AlertDialog.Builder adb = new AlertDialog.Builder(this);
         adb.setCancelable(false);
-
         adb.setItems(arrGroups, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int item) {
-
                 switch (item) {
                     case 0:
                         Uri address = Uri.parse("https://m.facebook.com/IsraelTypicalMoto");
@@ -136,7 +125,7 @@ public class AboutProgram extends AppCompatActivity {
                         dialog.dismiss();
                         break;
                     case 1:
-                        address = Uri.parse("https://m.facebook.com/CollectAllMotorcyclists");
+                        address = Uri.parse("https://m.facebook.com/UniteAllMotorcyclists");
                         openlink = new Intent(Intent.ACTION_VIEW, address);
                         startActivity(openlink);
                         dialog.dismiss();
@@ -144,7 +133,6 @@ public class AboutProgram extends AppCompatActivity {
                 }
             }
         });
-
         dialog = adb.show();
     }
 

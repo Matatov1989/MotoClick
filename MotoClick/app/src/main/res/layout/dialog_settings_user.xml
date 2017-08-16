@@ -5,11 +5,21 @@
     android:layout_height="match_parent"
     android:padding="16dp">
 
+    <TextView
+        android:id="@+id/btnDeleteAccount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="right"
+        android:paddingTop="0dp"
+        android:text="@string/textDeleteAccount"
+        android:textColor="@color/colorBlack" />
+
     <de.hdodenhof.circleimageview.CircleImageView
         android:id="@+id/imageUser"
-        android:layout_width="61dp"
-        android:layout_height="61dp"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
         android:layout_gravity="center"
+        android:layout_marginTop="20dp"
         android:src="@mipmap/ic_launcher"
         app:civ_border_color="#FF000000"
         app:civ_border_width="2dp" />
@@ -26,7 +36,6 @@
             android:layout_height="wrap_content"
             android:ems="20"
             android:hint="@string/hintTypeName"
-            android:text="Pop"
             android:inputType="textPersonName" />
 
     </android.support.design.widget.TextInputLayout>

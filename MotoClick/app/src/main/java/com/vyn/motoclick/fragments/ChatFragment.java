@@ -43,6 +43,7 @@ public class ChatFragment extends Fragment implements ChatContract.View, TextVie
     private ChatRecyclerAdapter mChatRecyclerAdapter;
 
     private ChatPresenter mChatPresenter;
+    private boolean flagSend = true;
 
     ImageButton btnSendMsg;
 
@@ -80,8 +81,10 @@ public class ChatFragment extends Fragment implements ChatContract.View, TextVie
 
         btnSendMsg.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                if (!mETxtMessage.getText().toString().isEmpty())
+                if (!mETxtMessage.getText().toString().isEmpty() && flagSend == true) {
+                    flagSend = false;
                     sendMessage();
+                }
             }
         });
         return fragmentView;
@@ -116,6 +119,7 @@ public class ChatFragment extends Fragment implements ChatContract.View, TextVie
     public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
         if (actionId == EditorInfo.IME_ACTION_SEND) {
             sendMessage();
+            flagSend = true;
             return true;
         }
         return false;

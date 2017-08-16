@@ -29,6 +29,9 @@
     <string name="toastAuthFinish">Авторизации завершена.</string>
     <string name="toastPickFinish">Загрузка завершена.</string>
     <string name="toastEnterName">Пожалуйста введите Ваше имя!</string>
+    <string name="toastDelAccount">Ваша учетная запись удалена.</string>
+    <string name="toastDelAccountError">При удалении учетной записи произошла ошибка. Попробуйте еще раз.</string>
+    <string name="toasNotAuth">Вы не авторизованы.</string>
 
     <string name="titleStatus">Статусы</string>
     <string name="titleInstruction">Инструкция</string>
@@ -45,9 +48,10 @@
     <string name="textStatus">статус:</string>
     <string name="textPhone">телефон:</string>
     <string name="textMoto">мотоцикл:</string>
-    <string name="textVersion">Версия: 1.3.0</string>
+    <string name="textVersion">Версия: 1.3.2</string>
     <string name="textGroupFacebook">Наша группа</string>
     <string name="textWorkersProject">Над проектом работают</string>
+    <string name="textDeleteAccount">удалить аккаунт</string>
 
     <string name="navStatus">Статусы</string>
     <string name="navInstructions">Инструкция</string>
@@ -81,6 +85,7 @@
     </string>
 
     <string name="dialogPermissionLocation">Программа использует функцию определения местоположения устройства. Это необходимо для определения Вашего местоположения для того что бы пользователи программы могли видеть Вас и связаться с Вами. За определение местоположения телефона может взиматься дополнительная плата. Подробности Вы можете узнать у Вашего сотового оператора.</string>
+    <string name="dialogDelAccount">Вы действительно хотите удалить учетную запись и покинуть программу?</string>
 
     <string name="worker1">Виктор Конарев</string>
     <string name="worker2">Никита Мататов</string>
