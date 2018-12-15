@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.vyn.motoclick.R;
 
 
@@ -26,8 +27,13 @@ public class SplashActivity extends AppCompatActivity {
         mRunnable = new Runnable() {
             @Override
             public void run() {
-                // check if user is already logged in or not
-                startActivity(new Intent(SplashActivity.this, MapsActivity.class));
+
+                //the check is a new user
+                if (FirebaseAuth.getInstance().getCurrentUser() != null)
+                    startActivity(new Intent(SplashActivity.this, MapsActivity.class));
+                else
+                    startActivity(new Intent(SplashActivity.this, AuthenticationActivity.class));
+
                 finish();
             }
         };

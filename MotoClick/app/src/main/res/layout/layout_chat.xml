@@ -7,7 +7,7 @@
     android:background="@drawable/chat_background"
     android:fitsSystemWindows="true"
     tools:context="com.vyn.motoclick.activities.ChatActivity">
-<!--
+
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -22,12 +22,16 @@
             app:title="@string/app_name" />
 
     </android.support.design.widget.AppBarLayout>
-    -->
+
 
     <FrameLayout
         android:id="@+id/frame_layout_content_chat"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+
+
+
+        />
 
 </android.support.design.widget.CoordinatorLayout>

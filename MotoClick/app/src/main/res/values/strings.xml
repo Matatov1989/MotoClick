@@ -32,6 +32,10 @@
     <string name="toastDelAccount">Your account has been deleted.</string>
     <string name="toastDelAccountError">An error occurred while deleting the account. Try again.</string>
     <string name="toasNotAuth">You are not authorized.</string>
+    <string name="toasAddFriend">added.</string>
+    <string name="toasDelFriend">removed.</string>
+    <string name="toasDontHaveChat">The message history is empty.</string>
+    <string name="toasRemovChat">Chat was successfully deleted.</string>
 
 
     <string name="titleStatus">Statuses</string>
@@ -44,17 +48,17 @@
     <string name="btnPrivacyPolicy"><b><u>Privacy Policy</u></b>\n\n</string>
     <string name="btnEditProfile">Edit Profile</string>
     <string name="btnSave">Save</string>
+    <string name="btnAddFriend">Add to Friend</string>
+    <string name="btnDelFriend">Remove from friends</string>
 
-
+    <string name="textName">name:</string>
     <string name="textStatus">status:</string>
     <string name="textPhone">phone:</string>
     <string name="textMoto">moto:</string>
-    <string name="textVersion">Version: 1.3.2</string>
+    <string name="textVersion">Version: 1.3.3</string>
     <string name="textGroupFacebook">Our Group</string>
     <string name="textWorkersProject">Work on the project</string>
     <string name="textDeleteAccount">delete account</string>
-
-
     <string name="navStatus">Statuses</string>
     <string name="navInstructions">Instructions</string>
     <string name="navAdviseFriend">Recommend to friends</string>
@@ -62,6 +66,10 @@
     <string name="navFromDeveloper">More from developer</string>
     <string name="navLinkFb">Group in facebook</string>
     <string name="navFeedback">Feedback</string>
+    <string name="navPlaceFriend">Place on the map</string>
+    <string name="navWay">route</string>
+    <string name="navListFriends">Friends</string>
+    <string name="navMessages">Messages</string>
 
 
     <string name="dialogProgressAuth">Please wait\ncompletion of authorization.</string>
@@ -89,9 +97,13 @@
 
     <string name="dialogPermissionLocation">The app uses the device\'s GPS to determine the location of the device. It is necessary to determine your location so that the users of the program can see you and contact you. The location of the phone may be subject to an additional charge. For details, contact your mobile operator.</string>
     <string name="dialogDelAccount">Are you sure you want to delete the account and leave the program?</string>
+    <string name="dialogAddNewFriends">You do not have any friends! Add friends to your list or invite your friends to the program.</string>
+    <string name="dialogDelFriends">Are you sure you want to remove a friend from the list?</string>
+
 
     <string name="worker1">Victor Konarev</string>
     <string name="worker2">Nikita Matatov</string>
     <string name="worker3">Yury Matatov</string>
+    <string name="title_activity_chat2">ChatActivity2</string>
 
 </resources>

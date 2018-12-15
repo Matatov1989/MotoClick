@@ -22,7 +22,7 @@ import okhttp3.Response;
 public class FcmNotificationBuilder {
     final String LOG_TAG = "myLogs";
     public static final MediaType MEDIA_TYPE_JSON = MediaType.parse("application/json; charset=utf-8");
-    private static final String SERVER_API_KEY = "";
+    private static final String SERVER_API_KEY = "AAAAyFdIRL8:APA91bH00ocsJs0Gy60rt1RirjrG9f9I5RKoGne4MMSONK0vJaKJvqdEPYtHEgRafxQ64agfks3BuQwrgb2SsdbryfZwO22Q-NRMyY0vfszbBsAzw2eWZQ52-1JI3cXkxBa12Vy1HDvC";
     private static final String CONTENT_TYPE = "Content-Type";
     private static final String APPLICATION_JSON = "application/json";
     private static final String AUTHORIZATION = "Authorization";

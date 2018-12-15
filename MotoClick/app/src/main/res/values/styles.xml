@@ -9,7 +9,7 @@
     </style>
 
     <style name="AppTheme.NoActionBar.Splash">
-   <!--     <item name="android:windowBackground">@drawable/startscreen</item> -->
+        <!--     <item name="android:windowBackground">@drawable/startscreen</item> -->
         <item name="android:windowBackground">@color/colorWhite</item>
     </style>
 

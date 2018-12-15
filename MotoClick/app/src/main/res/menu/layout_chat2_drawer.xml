@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_add_friend"
+            android:icon="@drawable/ic_menu_camera"
+            android:title="55" />
+        <item
+            android:id="@+id/nav_del_friend"
+            android:icon="@drawable/ic_menu_gallery"
+            android:visible="false"
+            android:title="58" />
+        <item
+            android:id="@+id/nav_place_friend"
+            android:icon="@drawable/ic_menu_slideshow"
+            android:title="@string/navPlaceFriend" />
+        <item
+            android:id="@+id/nav_way"
+            android:icon="@drawable/ic_menu_manage"
+            android:title="@string/navWay" />
+
+        <item
+            android:id="@+id/nav_list_friends"
+            android:icon="@drawable/ic_menu_manage"
+            android:title="@string/navListFriends" />
+    </group>
+
+
+</menu>

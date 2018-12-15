@@ -6,21 +6,20 @@ package com.vyn.motoclick.database;
 
 public class Chat {
     public String sender;
-    public String name;
-    public String receiver;
     public String senderUid;
+    public String receiver;
     public String receiverUid;
     public String message;
+    public String receiverToken;
     public long timestamp;
 
-    public Chat(){
+    public Chat() {
     }
 
-    public Chat(String sender, String name,String receiver, String senderUid, String receiverUid, String message, long timestamp){
+    public Chat(String sender, String senderUid, String receiver, String receiverUid, String message, long timestamp) {
         this.sender = sender;
-        this.name = name;
-        this.receiver = receiver;
         this.senderUid = senderUid;
+        this.receiver = receiver;
         this.receiverUid = receiverUid;
         this.message = message;
         this.timestamp = timestamp;

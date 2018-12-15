@@ -25,10 +25,8 @@ public class PrivacyPolicyActivity extends AppCompatActivity {
             flagExit = intent.getStringExtra("flagExit");
 
         mWebView = (WebView) findViewById(R.id.webView);
-        // включаем поддержку JavaScript
-        mWebView.getSettings().setJavaScriptEnabled(true);
-        // указываем страницу загрузки
-        mWebView.loadUrl("https://sites.google.com/view/motoclick-privacypolicy");
+        mWebView.getSettings().setJavaScriptEnabled(true);                          // turn on JavaScript
+        mWebView.loadUrl("https://sites.google.com/view/motoclick-privacypolicy");  // set link
     }
 
     @Override

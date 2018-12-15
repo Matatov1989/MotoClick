@@ -32,6 +32,11 @@
     <string name="toastDelAccount">Ваша учетная запись удалена.</string>
     <string name="toastDelAccountError">При удалении учетной записи произошла ошибка. Попробуйте еще раз.</string>
     <string name="toasNotAuth">Вы не авторизованы.</string>
+    <string name="toasAddFriend">добавлен.</string>
+    <string name="toasDelFriend">удален.</string>
+    <string name="toasDontHaveChat">История сообщений пуста.</string>
+    <string name="toasRemovChat">Чат успешно удален.</string>
+
 
     <string name="titleStatus">Статусы</string>
     <string name="titleInstruction">Инструкция</string>
@@ -43,12 +48,15 @@
     <string name="btnPrivacyPolicy"><b><u>Политика Конфиденциальности</u></b>\n\n</string>
     <string name="btnEditProfile">Изменить профиль</string>
     <string name="btnSave">сохранить</string>
+    <string name="btnAddFriend">Добавить в друзья</string>
+    <string name="btnDelFriend">Удалить из друзей</string>
 
 
+    <string name="textName">имя:</string>
     <string name="textStatus">статус:</string>
     <string name="textPhone">телефон:</string>
     <string name="textMoto">мотоцикл:</string>
-    <string name="textVersion">Версия: 1.3.2</string>
+    <string name="textVersion">Версия: 1.3.3</string>
     <string name="textGroupFacebook">Наша группа</string>
     <string name="textWorkersProject">Над проектом работают</string>
     <string name="textDeleteAccount">удалить аккаунт</string>
@@ -60,6 +68,11 @@
     <string name="navFromDeveloper">Еще от разработчика</string>
     <string name="navLinkFb">Группа в facebook</string>
     <string name="navFeedback">Оставить отзыв</string>
+    <string name="navPlaceFriend">Место на карте</string>
+    <string name="navWay">Маршрут</string>
+    <string name="navListFriends">Друзья</string>
+    <string name="navMessages">Сообщения</string>
+
 
 
     <string name="dialogProgressAuth">Пожалуйста подождите\nзавершения авторизации.</string>
@@ -86,10 +99,15 @@
 
     <string name="dialogPermissionLocation">Программа использует функцию определения местоположения устройства. Это необходимо для определения Вашего местоположения для того что бы пользователи программы могли видеть Вас и связаться с Вами. За определение местоположения телефона может взиматься дополнительная плата. Подробности Вы можете узнать у Вашего сотового оператора.</string>
     <string name="dialogDelAccount">Вы действительно хотите удалить учетную запись и покинуть программу?</string>
+    <string name="dialogAddNewFriends">У Вас нет друзей! Добавляйте друзей в Ваш список или пригласите своих друзей в программу.</string>
+    <string name="dialogDelFriends">Вы уверены, что хотите удалить друга из списка?</string>
+
 
     <string name="worker1">Виктор Конарев</string>
     <string name="worker2">Никита Мататов</string>
     <string name="worker3">Юрка Мататов</string>
+
+    <string name="title_activity_chat2">ChatActivity2</string>
 
 
 </resources>
