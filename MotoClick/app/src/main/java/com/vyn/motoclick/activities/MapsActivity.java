@@ -4,7 +4,6 @@ import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -27,19 +26,13 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-
-
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -55,27 +48,18 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Picasso;
 import com.vyn.motoclick.R;
-import com.vyn.motoclick.database.Friend;
-import com.vyn.motoclick.database.History;
-import com.vyn.motoclick.database.Receiver;
 import com.vyn.motoclick.database.UserData;
-import com.vyn.motoclick.utils.Constants;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -92,25 +76,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     String myUid;
     String myToken;
     double lat, lon;
-    boolean webTrue;
 
-    static public ArrayList<User> usersArrList = new ArrayList<>();
-    static public ArrayList<History> historyArrList = new ArrayList<>();
-    public ArrayList<Friend> friendArrList;
-    public ArrayList<Receiver> receiverArrList;
-
+    static public ArrayList<UserData> usersArrList = new ArrayList<>();
     TextView deleteAccount;
 
-    String statusUser;
     String btnAddOrDel;
 
     boolean flagSelectFoto = false;
 
     Dialog dialog, dialog1;
 
-    Friend friend;
-    History history;
-    Receiver receiver;
+
+    UserData userData;
 
     ImageView dialogImageUser;
     TextView dialogNameUser;
@@ -128,14 +105,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private static final int REQUEST = 1;
 
     private GoogleMap mMap;
-    private GoogleApiClient mGoogleApiClient;
-    private FirebaseAuth mAuth;
     public ProgressDialog mProgressDialog;
 
-
     private static boolean sIsChatActivityOpen = false;
-
-    private boolean firsrCreate = false;
 
     public static final int MULTIPLE_PERMISSIONS = 1; // code you want.
     String[] permissions = new String[]{
@@ -151,10 +123,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
 
         Log.d(LOG_TAG, "onCreate  ");
+
+        userData = (UserData) getIntent().getParcelableExtra(UserData.class.getCanonicalName());
+
+        Log.d(LOG_TAG, "onCreate userData "+userData.getUserName());
+        Log.d(LOG_TAG, "onCreate userData "+userData.getUserLocation().getLatitude());
+        Log.d(LOG_TAG, "onCreate userData "+userData.getUserLocation().getLongitude());
+
         checkPermissions();
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        //          setSupportActionBar(toolbar);
+
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
@@ -172,7 +151,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onClick(View view) {
 
                 getLocation();
-                getMyAccountFromFirebase();
                 //        getAllUsersFromFirebase();
             }
         });
@@ -182,23 +160,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         settingsUser = (TextView) headerView.findViewById(R.id.settingsUser);
         textUserName = (TextView) headerView.findViewById(R.id.textUserName);
 
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .enableAutoManage(this /* FragmentActivity */, this /* OnConnectionFailedListener */)
-                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
-                .build();
-
-        mAuth = FirebaseAuth.getInstance();
-
-        if (FirebaseAuth.getInstance().getCurrentUser() == null) {
-
-        } else {
-            friend = new Friend();
-            history = new History();
-            getLocation();
-            getMyAccountFromFirebase();
-            getCountReseivMsgFromFirebase(false);
-            //       getAllUsersFromFirebase();
-        }
+        getLocation();
 
         settingsUser.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -209,49 +171,59 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
-    //вытаскиваю свои данные и заполняю иими объекты +++
-    private void getMyAccountFromFirebase() {
-        Log.d(LOG_TAG, "getMyAccountFromFirebase");
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
 
-        FirebaseDatabase.getInstance().getReference()
-                .child("users")
-                .child(FirebaseAuth.getInstance().getCurrentUser().getUid())
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                   //     Log.d(LOG_TAG, "getMyAccountFromFirebase onDataChange " + dataSnapshot.getValue(UserData.class).getNameUser());
-                   //     Log.d(LOG_TAG, "getMyAccountFromFirebase onDataChange " + dataSnapshot.getValue(UserData.class).getStatus());
+        Log.d(LOG_TAG, "onMapReady" );
+        mMap = googleMap;
+        mMap.clear();
+        //моя точка
+        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+            if (!textUserName.getText().toString().isEmpty()) {
+                if (lat != 0 && lon != 0) {
 
-                        myName = dataSnapshot.getValue(UserData.class).getUserName();
-                        myPhoto = dataSnapshot.getValue(UserData.class).getUserUriPhoto();
-                        myMoto = dataSnapshot.getValue(UserData.class).getUserMoto();
+                    mMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon)).snippet("z").icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_motorcycle)));
+                    //вид на карту
+                    CameraPosition cameraPosition = new CameraPosition.Builder()
+                            .target(new LatLng(lat, lon))        //точка иерусалима
+                            .zoom(15)                                            //зум
+                            .bearing(0)                                    //поворот карт
+                            .tilt(20)                                       //угол наклона
+                            .build();
+                    //И передаем полученный объект в метод newCameraPosition, получая CameraUpdate, который в свою очередь передаем в метод animateCamera
+                    CameraUpdate cameraUpdate = CameraUpdateFactory.newCameraPosition(cameraPosition);
+                    mMap.animateCamera(cameraUpdate);
+                }
+            }
+            mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
 
-                        myUid = dataSnapshot.getValue(UserData.class).getUserId();
-                        myToken = dataSnapshot.getValue(UserData.class).getUserFirebaseToken();
+                @Override
+                public boolean onMarkerClick(Marker arg0) {
+                    Log.d(LOG_TAG, "snipped " + arg0.getSnippet());
+                    Log.d(LOG_TAG, "you " + FirebaseAuth.getInstance().getCurrentUser().getUid());
+                    if (!arg0.getSnippet().toString().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
 
-                        lat = dataSnapshot.getValue(UserData.class).getUserLocation().getLatitude();
-                        lon = dataSnapshot.getValue(UserData.class).getUserLocation().getLongitude();
+                        //      int position = Integer.parseInt(arg0.getSnippet());
+                        for (int i = 0; i < usersArrList.size(); i++) {
+                            if (arg0.getSnippet().toString().equals(usersArrList.get(i).getUserId())){
 
-                        Picasso.with(MapsActivity.this)
-                                .load(myPhoto)
-                                .error(R.mipmap.ic_launcher)
-                                .into(imageUser);
-
-                        textUserName.setText(myName);
-
-                        //запускаем карту
-                        SupportMapFragment mapFragment =
-                                (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
-                        mapFragment.getMapAsync(MapsActivity.this);
-
-                        getAllUsersFromFirebase();
+                            }
+                            //              getUserFromFirebase(arg0.getSnippet());
+                            ///           dialogInfoUser(usersArrList.get(i).getNameUser(), Integer.parseInt(usersArrList.get(i).getStatus()), usersArrList.get(i).getUriPhoto(), usersArrList.get(i).getMoto(), usersArrList.get(i).getPhone(), i, usersArrList.get(i).getUid());
+                        }
                     }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                        Log.d(LOG_TAG, "getMyAccountFromFirebase onCancelled " + databaseError);
-                    }
-                });
+                    return true;
+                }
+            });
+        } else //пустота...если никого нет
+        {
+            CameraPosition cameraPosition = new CameraPosition.Builder()
+                    .target(new LatLng(31.7962994, 35.1053184))        //точка иерусалима
+                    .zoom(6)                                            //зум
+                    .bearing(0)                                    //поворот карт
+                    .tilt(20)                                       //угол наклона
+                    .build();
+        }
     }
 
 
@@ -268,7 +240,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         mDatabase.updateChildren(userValues);
 
-        getMyAccountFromFirebase();
 
         Toast toast = Toast.makeText(getApplicationContext(),
                 "update",
@@ -291,7 +262,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     @Override
                     public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
                         if (task.isSuccessful()) {
-                            myPhoto = task.getResult().getDownloadUrl().toString();
+                            //       myPhoto = task.getResult().getDownloadUrl().toString();
+
                             updateUserToDatabase();
                             /*
                             Picasso.with(MapsActivity.this)
@@ -330,68 +302,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     @Override
-    public void onMapReady(GoogleMap googleMap) {
-        mMap = googleMap;
-        mMap.clear();
-
-        //моя точка
-        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-            if (!textUserName.getText().toString().isEmpty()) {
-                if (lat != 0 && lon != 0) {
-
-                    //вид на карту
-                    CameraPosition cameraPosition = new CameraPosition.Builder()
-                            .target(new LatLng(lat, lon))        //точка иерусалима
-                            .zoom(15)                                            //зум
-                            .bearing(0)                                    //поворот карт
-                            .tilt(20)                                       //угол наклона
-                            .build();
-                    //И передаем полученный объект в метод newCameraPosition, получая CameraUpdate, который в свою очередь передаем в метод animateCamera
-                    CameraUpdate cameraUpdate = CameraUpdateFactory.newCameraPosition(cameraPosition);
-                    mMap.animateCamera(cameraUpdate);
-                } else {
-                    CameraPosition cameraPosition = new CameraPosition.Builder()
-                            .target(new LatLng(31.7962994, 35.1053184))        //точка иерусалима
-                            .zoom(6)                                            //зум
-                            .bearing(0)                                    //поворот карт
-                            .tilt(20)                                       //угол наклона
-                            .build();
-
-                    //И передаем полученный объект в метод newCameraPosition, получая CameraUpdate, который в свою очередь передаем в метод animateCamera
-                    CameraUpdate cameraUpdate = CameraUpdateFactory.newCameraPosition(cameraPosition);
-                    mMap.animateCamera(cameraUpdate);
-                }
-            }
-            mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
-
-                @Override
-                public boolean onMarkerClick(Marker arg0) {
-                    Log.d(LOG_TAG, "snipped " + arg0.getSnippet());
-                    Log.d(LOG_TAG, "you " + FirebaseAuth.getInstance().getCurrentUser().getUid());
-                    if (!arg0.getSnippet().toString().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
-
-                        //      int position = Integer.parseInt(arg0.getSnippet());
-                        for (int i = 0; i < usersArrList.size(); i++) {
-                            if (arg0.getSnippet().toString().equals(usersArrList.get(i).getUid()))
-                                getUserFromFirebase(arg0.getSnippet());
-                            ///           dialogInfoUser(usersArrList.get(i).getNameUser(), Integer.parseInt(usersArrList.get(i).getStatus()), usersArrList.get(i).getUriPhoto(), usersArrList.get(i).getMoto(), usersArrList.get(i).getPhone(), i, usersArrList.get(i).getUid());
-                        }
-                    }
-                    return true;
-                }
-            });
-        } else //пустота...если никого нет
-        {
-            CameraPosition cameraPosition = new CameraPosition.Builder()
-                    .target(new LatLng(31.7962994, 35.1053184))        //точка иерусалима
-                    .zoom(6)                                            //зум
-                    .bearing(0)                                    //поворот карт
-                    .tilt(20)                                       //угол наклона
-                    .build();
-        }
-    }
-
-    @Override
     protected void onResume() {
         super.onResume();
         Log.d(LOG_TAG, "onResume  ");
@@ -418,7 +328,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void getLocation() {
         Log.d(LOG_TAG, "getLocation");
-        locationGPS = new LocationGPS(MapsActivity.this);
+    /*    locationGPS = new LocationGPS(MapsActivity.this);
         // check if GPS enabled
         Log.d(LOG_TAG, "getLocation check = " + locationGPS.canGetLocation());
         if (locationGPS.canGetLocation()) {
@@ -440,7 +350,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             //     return location;
         }
         locationGPS.stopUsingGPS();
-        Log.d(LOG_TAG, "getLocation ret = " + location);
+        Log.d(LOG_TAG, "getLocation ret = " + location);*/
     }
 
     //диалог для изменения личных данных и аву или удаления аккаунта +++
@@ -460,17 +370,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         TextInputLayout tilMoto = (TextInputLayout) v.findViewById(R.id.textInputLayoutMoto);
         final EditText editMoto = (EditText) tilMoto.findViewById(R.id.editTextMoto);
 
-        Picasso.with(this)
+        Picasso.get()
                 .load(myPhoto)
                 .error(R.mipmap.ic_launcher)
                 .into(imageProf);
 
         editName.setText(myName);
-        editPhone.setText(myPhone);
         editMoto.setText(myMoto);
 
         editName.setSelection(editName.getText().toString().length());
-        editPhone.setSelection(editPhone.getText().toString().length());
         editMoto.setSelection(editMoto.getText().toString().length());
 
         final AlertDialog.Builder adb = new AlertDialog.Builder(MapsActivity.this);
@@ -544,7 +452,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 myMoto = "";
                 myPhoto = "";
 
-                Picasso.with(MapsActivity.this)
+                Picasso.get()
                         .load("1")
                         .error(R.mipmap.ic_launcher)
                         .into(imageUser);
@@ -587,13 +495,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         dialogNameUser = (TextView) v.findViewById(R.id.textNameUser);
         dialogMotoUser = (TextView) v.findViewById(R.id.textMotoUser);
 
-        Picasso.with(this)
-                .load(user.getUriPhoto())
+        Picasso.get()
+                .load(user.getUserUriPhoto())
                 .error(R.mipmap.ic_launcher)
                 .into(dialogImageUser);
 
-        dialogNameUser.setText(user.getNameUser());
-        dialogMotoUser.setText(dialogMotoUser.getText().toString() + " " + user.getMoto());
+        dialogNameUser.setText(user.getUserName());
+        dialogMotoUser.setText(dialogMotoUser.getText().toString() + " " + user.getUserMoto());
 
         AlertDialog.Builder adb = new AlertDialog.Builder(MapsActivity.this);
         adb.setCancelable(true);
@@ -602,9 +510,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         adb.setPositiveButton(R.string.btnContact, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
                 ChatActivity.startActivity(MapsActivity.this,
-                        user.getNameUser(),
-                        user.getUid(),
-                        user.getFirebaseToken(),
+                        user.getUserName(),
+                        user.getUserId(),
+                        user.getUserFirebaseToken(),
                         myToken);
                 dialog.dismiss();
             }
@@ -612,18 +520,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         adb.setNeutralButton(btnAddOrDel, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
                 //     addFriendToFirebase(usersArrList.get(posotion).getUid(), usersArrList.get(posotion).getNameUser(), usersArrList.get(posotion).getFirebaseToken());
-                if (btnAddOrDel.equals(getString(R.string.btnAddFriend)))
+          /*      if (btnAddOrDel.equals(getString(R.string.btnAddFriend)))
                     addFriendToFirebase(user.getUid(), user.getNameUser(), user.getFirebaseToken());
                 else if (btnAddOrDel.equals(getString(R.string.btnDelFriend)))
                     dialogDeleteFriend(user.getUid(), user.getNameUser());
-
+*/
                 dialog.dismiss();
             }
         });
         adb.setNegativeButton(R.string.btnWay, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
-                String lat = String.valueOf(user.getLocation().getLatitude());
-                String lon = String.valueOf(user.getLocation().getLongitude());
+                String lat = String.valueOf(user.getUserLocation().getLatitude());
+                String lon = String.valueOf(user.getUserLocation().getLongitude());
 
                 Uri gmmIntentUri = Uri.parse("google.navigation:q=" + lat + "," + lon + "&mode=d&avoid=h");
                 Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
@@ -635,7 +543,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
         dialog = adb.show();
     }
-
 
     //запуск диалог прогресса +++
     private void showProgressDialog(String message) {
@@ -655,15 +562,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    //посоветовать друзьям +++
-    private void adviseToFriends() {
-        Intent sendIntent = new Intent();
-        sendIntent.setAction(Intent.ACTION_SEND);
-        sendIntent.putExtra(Intent.EXTRA_TEXT, "https://play.google.com/store/apps/details?id=com.vyn.motoclick&hl");
-        sendIntent.setType("text/plain");
-        startActivity(sendIntent);
-    }
-
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -676,36 +574,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
-        // Handle navigation view item clicks here.
         switch (item.getItemId()) {
-            case R.id.nav_list_friends:
-                getFriendsFromFirebase();
-                break;
+
             case R.id.nav_messages:
-                getCountReseivMsgFromFirebase(true);
+                //         getCountReseivMsgFromFirebase(true);
 
                 //   dialogListMesage();
                 //         getMessagesFromFirebase();
@@ -715,8 +590,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 break;
             case R.id.nav_advise_friend:
                 //advise to friends
-                adviseToFriends();
+                Intent sendIntent = new Intent();
+                sendIntent.setAction(Intent.ACTION_SEND);
+                sendIntent.putExtra(Intent.EXTRA_TEXT, "https://play.google.com/store/apps/details?id=com.vyn.motoclick&hl");
+                sendIntent.setType("text/plain");
+                startActivity(sendIntent);
                 break;
+
             case R.id.nav_about_program:
                 startActivity(new Intent(MapsActivity.this, AboutProgram.class));
                 break;

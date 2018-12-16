@@ -16,7 +16,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.vyn.motoclick.R;
-import com.vyn.motoclick.database.History;
 import com.vyn.motoclick.fragments.ChatFragment;
 import com.vyn.motoclick.utils.Constants;
 
@@ -59,46 +58,7 @@ public class ChatActivity extends AppCompatActivity {
 //        resetCntMsgFirebase(Constants.ARG_RECEIVER_UID);
     }
 
-    //удалить прочитанное сообшение сброс счетчика смс+++
-    private void resetCntMsgFirebase(final String uidSender) {
-        Log.d(LOG_TAG, "resetCntMsgFirebase " + uidSender);
-        FirebaseDatabase.getInstance().getReference()
-                .child("users")
-                .child(FirebaseAuth.getInstance().getCurrentUser().getUid())
-                .child("history")
-                .child(uidSender).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
 
-                Log.d(LOG_TAG, "resetCntMsgFirebase " + dataSnapshot);
-                if (dataSnapshot.getValue() != null) {
-
-            //        Log.d(LOG_TAG, "resetCntMsgFirebase send val " + dataSnapshot.getValue());
-            //        Log.d(LOG_TAG, "resetCntMsgFirebase send if cnt " + dataSnapshot.getValue(History.class).getCntMsg());
-            //        Log.d(LOG_TAG, "resetCntMsgFirebase send if name " + dataSnapshot.getValue(History.class).getNameUser());
-
-                    DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
-                    String historyKey = mDatabase.child("users")
-                            .child(FirebaseAuth.getInstance().getCurrentUser().getUid())
-                            .child("history")
-                            .child(uidSender).getKey();
-
-                    History history = new History(dataSnapshot.getValue(History.class).getUidUser(), dataSnapshot.getValue(History.class).getNameUser(), dataSnapshot.getValue(History.class).getTokenUser(), 0);
-                    Map<String, Object> postValues = history.toMap();
-
-                    Map<String, Object> childUpdates = new HashMap<>();
-                    childUpdates.put("users/" + FirebaseAuth.getInstance().getCurrentUser().getUid() + "/history/" + historyKey, postValues);
-
-                    mDatabase.updateChildren(childUpdates);
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-        //        Log.d(LOG_TAG, "2 TEST onCancelled " + databaseError);
-            }
-        });
-    }
 
     private void bindViews() {
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -127,14 +87,12 @@ public class ChatActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        resetCntMsgFirebase(getIntent().getExtras().getString(Constants.ARG_RECEIVER_UID));
         //      MainActivity1.setChatActivityOpen(true);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        resetCntMsgFirebase(getIntent().getExtras().getString(Constants.ARG_RECEIVER_UID));
         //     MainActivity1.setChatActivityOpen(false);
     }
 

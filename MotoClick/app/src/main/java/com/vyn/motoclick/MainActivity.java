@@ -120,27 +120,8 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
@@ -148,9 +129,7 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_status) {
-            //        dialogStatus();
-        } else if (id == R.id.nav_instructions) {
+       if (id == R.id.nav_instructions) {
             //        dialogInstructions();
         } else if (id == R.id.nav_advise_friend) {
             //advise to friends
@@ -161,18 +140,7 @@ public class MainActivity extends AppCompatActivity
             startActivity(sendIntent);
         } else if (id == R.id.nav_about_program) {
 
-        } else if (id == R.id.nav_from_developer) {
-            //from developer
-            Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setData(Uri.parse("https://play.google.com/store/apps/developer?id=Yurka+Sergeant+Matatov"));
-            startActivity(intent);
-        } else if (id == R.id.nav_link_fb) {
-            //открыть ссылку в браузере
-            Uri address = Uri.parse("https://www.facebook.com/IsraelTypicalMoto/");
-            Intent openlink = new Intent(Intent.ACTION_VIEW, address);
-            startActivity(openlink);
         }
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;

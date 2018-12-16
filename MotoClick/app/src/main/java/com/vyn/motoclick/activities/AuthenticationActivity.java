@@ -5,7 +5,7 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
@@ -47,8 +47,8 @@ public class AuthenticationActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.layout_authentication);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        //    Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        //    setSupportActionBar(toolbar);
 
         // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance();
@@ -59,9 +59,7 @@ public class AuthenticationActivity extends AppCompatActivity {
                 .requestEmail()
                 .build();
 
-
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
-
 
         signInButton = (SignInButton) findViewById(R.id.auth_button);
         btnPrivacyPolicy = (TextView) findViewById(R.id.btnPrivacyPolicy);
@@ -127,25 +125,22 @@ public class AuthenticationActivity extends AppCompatActivity {
     }
 
     private void addUserToFirebaseDatabase(FirebaseUser firebaseUser) {
+
+        Log.d(LOG_TAG, "addUserToFirebaseDatabase  ");
         LocationData locationUser = new LocationData(0.0, 0.0);
 
-    /*   final UserData user1 = new UserData(firebaseUser.getUid(),
-                new SharedPrefUtil(getBaseContext()).getString(Constants.ARG_RECEIVER_TOKEN),
-                firebaseUser.getDisplayName(),
-                firebaseUser.getPhotoUrl().toString(),
-                Constants.ARG_USERS, locationUser,
-                0);
-        */
-
-        final UserData user = new UserData(firebaseUser.getUid(), firebaseUser.getDisplayName(), firebaseUser.getPhotoUrl().toString(), locationUser, "", new SharedPrefUtil(getBaseContext()).getString(Constants.ARG_RECEIVER_TOKEN));
-
+        final UserData userData = new UserData(firebaseUser.getUid(), firebaseUser.getDisplayName(), firebaseUser.getPhotoUrl().toString(), locationUser, new SharedPrefUtil(getBaseContext()).getString(Constants.ARG_RECEIVER_TOKEN));
 
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
-        databaseReference.child(Constants.ARG_USERS).child(firebaseUser.getUid()).setValue(user).addOnCompleteListener(new OnCompleteListener<Void>() {
+        databaseReference.child(Constants.ARG_USERS).child(firebaseUser.getUid()).setValue(userData).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
+                Log.d(LOG_TAG, "addUserToFirebaseDatabase task.isSuccessful() "+task.isSuccessful());
                 if (task.isSuccessful()) {
-                    startActivity(new Intent(AuthenticationActivity.this, MapsActivity.class));
+
+                    Intent intent = new Intent(AuthenticationActivity.this, MapsActivity.class);
+                    intent.putExtra(UserData.class.getCanonicalName(), userData);
+                    startActivity(intent);
                 } else {
                 }
             }

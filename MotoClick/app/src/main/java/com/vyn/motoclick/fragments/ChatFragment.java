@@ -30,7 +30,6 @@ import com.vyn.motoclick.adapters.ChatRecyclerAdapter;
 import com.vyn.motoclick.chat.ChatContract;
 import com.vyn.motoclick.chat.ChatPresenter;
 import com.vyn.motoclick.database.Chat;
-import com.vyn.motoclick.database.History;
 import com.vyn.motoclick.events.PushNotificationEvent;
 import com.vyn.motoclick.utils.Constants;
 
@@ -148,46 +147,6 @@ public class ChatFragment extends Fragment implements ChatContract.View, TextVie
         return false;
     }
 
-    //удалить прочитанное сообшение сброс счетчика смс+++
-    private void resetCntMsgFirebase(final String uidSender) {
-        FirebaseDatabase.getInstance().getReference()
-                .child("users")
-                .child(FirebaseAuth.getInstance().getCurrentUser().getUid())
-                .child("history")
-                .child(uidSender).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-
-                    Log.d(LOG_TAG, "resetCntMsgFirebase " + dataSnapshot);
-                if (dataSnapshot.getValue() != null) {
-
-                    //        Log.d(LOG_TAG, "resetCntMsgFirebase send val " + dataSnapshot.getValue());
-                    //        Log.d(LOG_TAG, "resetCntMsgFirebase send if cnt " + dataSnapshot.getValue(History.class).getCntMsg());
-                    //        Log.d(LOG_TAG, "resetCntMsgFirebase send if name " + dataSnapshot.getValue(History.class).getNameUser());
-
-                    DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
-                    String historyKey = mDatabase.child("users")
-                            .child(FirebaseAuth.getInstance().getCurrentUser().getUid())
-                            .child("history")
-                            .child(uidSender).getKey();
-
-                    History history = new History(dataSnapshot.getValue(History.class).getUidUser(), dataSnapshot.getValue(History.class).getNameUser(), dataSnapshot.getValue(History.class).getTokenUser(), 0);
-                    Map<String, Object> postValues = history.toMap();
-
-                    Map<String, Object> childUpdates = new HashMap<>();
-                    childUpdates.put("users/" + FirebaseAuth.getInstance().getCurrentUser().getUid() + "/history/" + historyKey, postValues);
-
-                    mDatabase.updateChildren(childUpdates);
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                //        Log.d(LOG_TAG, "2 TEST onCancelled " + databaseError);
-            }
-        });
-    }
-
     private void sendMessage(String message) {
         String sender = FirebaseAuth.getInstance().getCurrentUser().getDisplayName();
         String senderUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
@@ -201,148 +160,9 @@ public class ChatFragment extends Fragment implements ChatContract.View, TextVie
         mChatPresenter.sendMessage(getActivity().getApplicationContext(), chat, receiverFirebaseToken);
 
     //    sendToUser();
-        sendToUser();
-        sendToMe(senderUid);
-
-
     }
 
-    private void sendToMe(final String senderUid){
-        FirebaseDatabase.getInstance().getReference().child("users")
-                                                     .child(senderUid)      //отпрпавитель
-                                                     .child("history")
-                                                     .child(getArguments().getString(ARG_RECEIVER_UID)) //получатель
-                                                     .addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
 
-                Log.d(LOG_TAG, "sendToMe " + dataSnapshot);
-                if (dataSnapshot.getValue() != null) {
-
-                //    Log.d(LOG_TAG, "sendToMe have" + dataSnapshot);
-              //      Log.d(LOG_TAG, "TEST send val " + dataSnapshot.getValue());
-              //      Log.d(LOG_TAG, "TEST send if cnt " + dataSnapshot.getValue(History.class).getCntMsg());
-                    Log.d(LOG_TAG, "sendToMe token " + dataSnapshot.getValue(History.class).getTokenUser());
-
-                    DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
-                    String historyKey = mDatabase
-                            .child("users")
-                            .child(senderUid)      //отпрпавитель
-                            .child("history")
-                            .child(getArguments().getString(ARG_RECEIVER_UID)) //получатель
-                            .getKey();
-
-                 //   int cntMsg = dataSnapshot.getValue(History.class).getCntMsg() + 1;
-
-                    History history = new History(dataSnapshot.getValue(History.class).getUidUser(), dataSnapshot.getValue(History.class).getNameUser(), dataSnapshot.getValue(History.class).getTokenUser(), 0);
-                    Map<String, Object> postValues = history.toMap();
-
-                    Map<String, Object> childUpdates = new HashMap<>();
-                    childUpdates.put("users/" + senderUid + "/history/" + historyKey, postValues);
-
-                    mDatabase.updateChildren(childUpdates);
-                }
-                else{
-                    Log.d(LOG_TAG, "sendToMe new " + dataSnapshot);
-
-                    Log.d(LOG_TAG, "sendToMe new token " + getArguments().getString(Constants.ARG_RECEIVER_TOKEN));
-                    DatabaseReference database = FirebaseDatabase.getInstance().getReference();
-                    History history = new History(getArguments().getString(ARG_RECEIVER_UID), getArguments().getString(ARG_RECEIVER), getArguments().getString(Constants.ARG_RECEIVER_TOKEN), 0);
-                    database.child("users")
-                            .child(senderUid)
-                            .child("history")
-                            .child(getArguments().getString(ARG_RECEIVER_UID))
-                            .setValue(history)
-                            .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                @Override
-                                public void onComplete(@NonNull Task<Void> task) {
-                                    if (task.isSuccessful()) {
-                                        //        Toast.makeText(MapsActivity.this, toastFriend, Toast.LENGTH_SHORT).show();
-                                    } else {
-                                    }
-                                }
-                            });
-                }
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Log.d(LOG_TAG, "2 TEST onCancelled " + databaseError);
-            }
-        });
-    }
-
-    //send count to data for user
-    private void sendToUser() {
-
-        Log.d(LOG_TAG, "sendToUser");
-
-        FirebaseDatabase.getInstance().getReference()
-                .child("users")
-                .child(getArguments().getString(ARG_RECEIVER_UID))      //полечатель
-                .child("history")
-                .child(FirebaseAuth.getInstance().getCurrentUser().getUid())        //отправитель
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-
-                if (dataSnapshot.getValue() != null) {
-
-                    Log.d(LOG_TAG, "sendToUser update");
-               //     Log.d(LOG_TAG, "sendToUser val " + dataSnapshot.getValue());
-                    Log.d(LOG_TAG, "sendToUser cnt " + dataSnapshot.getValue(History.class).getCntMsg());
-                    Log.d(LOG_TAG, "sendToUser name " + dataSnapshot.getValue(History.class).getNameUser());
-                    Log.d(LOG_TAG, "sendToUser token " + dataSnapshot.getValue(History.class).getTokenUser());
-
-                    DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
-                    String historyKey = mDatabase
-                            .child("users")
-                            .child(getArguments().getString(ARG_RECEIVER_UID))      //получатель
-                            .child("history")
-                            .child(FirebaseAuth.getInstance().getCurrentUser().getUid())    //отправитель
-                            .getKey();
-
-                    int cntMsg = dataSnapshot.getValue(History.class).getCntMsg() + 1;
-
-                    History history = new History(dataSnapshot.getValue(History.class).getUidUser(), dataSnapshot.getValue(History.class).getNameUser(), dataSnapshot.getValue(History.class).getTokenUser(), cntMsg);
-                    Map<String, Object> postValues = history.toMap();
-
-                    Map<String, Object> childUpdates = new HashMap<>();
-                    childUpdates.put("users/" + getArguments().getString(ARG_RECEIVER_UID) + "/history/" + historyKey, postValues);
-
-                    mDatabase.updateChildren(childUpdates);
-                }
-                else{
-                    Log.d(LOG_TAG, "sendToUser new");
-               //     Log.d(LOG_TAG, "sendToUser new token "+getArguments().getString(Constants.ARG_RECEIVER_TOKEN));
-                    DatabaseReference database = FirebaseDatabase.getInstance().getReference();
-                    History history = new History(FirebaseAuth.getInstance().getCurrentUser().getUid(), FirebaseAuth.getInstance().getCurrentUser().getDisplayName(), getArguments().getString(Constants.ARG_SENDER_TOKEN), 1);
-                    database.child("users")
-                            .child(getArguments().getString(ARG_RECEIVER_UID))
-                            .child("history")
-                            .child(FirebaseAuth.getInstance().getCurrentUser().getUid())
-                            .setValue(history)
-                            .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                @Override
-                                public void onComplete(@NonNull Task<Void> task) {
-                                    if (task.isSuccessful()) {
-                                        //        Toast.makeText(MapsActivity.this, toastFriend, Toast.LENGTH_SHORT).show();
-                                    } else {
-                                    }
-                                }
-                            });
-                }
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Log.d(LOG_TAG, "2 TEST onCancelled " + databaseError);
-            }
-        });
-
-    }
 
     @Override
     public void onSendMessageSuccess() {
