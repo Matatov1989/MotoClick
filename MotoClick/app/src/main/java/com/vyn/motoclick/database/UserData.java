@@ -60,20 +60,29 @@ public class UserData implements Parcelable {
         return userFirebaseToken;
     }
 
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
 
+    public void setUserUriPhoto(String userUriPhoto) {
+        this.userUriPhoto = userUriPhoto;
+    }
+
+    public void setUserMoto(String userMoto) {
+        this.userMoto = userMoto;
+    }
+/*
     @Exclude
     public Map<String, Object> toMap() {
         HashMap<String, Object> result = new HashMap<>();
-        result.put("userId", userId);
         result.put("userName", userName);
         result.put("userUriPhoto", userUriPhoto);
         result.put("userLocation", userLocation);
         result.put("userMoto", userMoto);
-        result.put("userFirebaseToken", userFirebaseToken);
 
         return result;
     }
-
+*/
     /*
     @Override
     public int describeContents() {
@@ -120,6 +129,7 @@ public class UserData implements Parcelable {
         dest.writeString(this.userName);
         dest.writeString(this.userUriPhoto);
         dest.writeParcelable(this.userLocation, flags);
+        dest.writeString(this.userMoto);
         dest.writeString(this.userFirebaseToken);
     }
 
@@ -128,6 +138,7 @@ public class UserData implements Parcelable {
         this.userName = in.readString();
         this.userUriPhoto = in.readString();
         this.userLocation = in.readParcelable(LocationData.class.getClassLoader());
+        this.userMoto = in.readString();
         this.userFirebaseToken = in.readString();
     }
 

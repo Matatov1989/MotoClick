@@ -19,7 +19,7 @@
         android:orientation="horizontal">
 
         <de.hdodenhof.circleimageview.CircleImageView xmlns:app="http://schemas.android.com/apk/res-auto"
-            android:id="@+id/imageUser"
+            android:id="@+id/imageNavUser"
             android:layout_width="61dp"
             android:layout_height="61dp"
             android:src="@mipmap/ic_launcher"
@@ -27,7 +27,7 @@
             app:civ_border_width="2dp" />
 
         <TextView
-            android:id="@+id/settingsUser"
+            android:id="@+id/navSettingsUser"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -38,10 +38,17 @@
     </LinearLayout>
 
     <TextView
-        android:id="@+id/textUserName"
+        android:id="@+id/textNavUserName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:text="Yura"
         android:paddingTop="@dimen/nav_header_vertical_spacing"
         android:textAppearance="@style/TextAppearance.AppCompat.Body1" />
+
+    <TextView
+        android:id="@+id/textNavUserMoto"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="suzuki" />
 
 </LinearLayout>

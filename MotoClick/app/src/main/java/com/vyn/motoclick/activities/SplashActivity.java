@@ -41,12 +41,15 @@ public class SplashActivity extends AppCompatActivity {
             public void run() {
 
                 //the check is a new user
-                if (FirebaseAuth.getInstance().getCurrentUser() == null)
+                if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+                    finish();
                     startActivity(new Intent(SplashActivity.this, AuthenticationActivity.class));
+
+                }
                 else
                     getMyAccountFromFirebase();
 
-                finish();
+
             }
         };
         mHandler.postDelayed(mRunnable, SPLASH_TIME_MS);
@@ -64,10 +67,11 @@ public class SplashActivity extends AppCompatActivity {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         Log.d(LOG_TAG, "getMyAccountFromFirebase onDataChange " + dataSnapshot.getValue(UserData.class).getUserName());
+                        Log.d(LOG_TAG, "getMyAccountFromFirebase onDataChange " + dataSnapshot.getValue(UserData.class).getUserMoto());
 
                         String userName = dataSnapshot.getValue(UserData.class).getUserName();
                         String userPhoto = dataSnapshot.getValue(UserData.class).getUserUriPhoto();
-                        //  myMoto = dataSnapshot.getValue(UserData.class).getUserMoto();
+                        String userMoto = dataSnapshot.getValue(UserData.class).getUserMoto();
 
                         String userUid = dataSnapshot.getValue(UserData.class).getUserId();
                         String userToken = dataSnapshot.getValue(UserData.class).getUserFirebaseToken();
@@ -76,9 +80,11 @@ public class SplashActivity extends AppCompatActivity {
                         lon = dataSnapshot.getValue(UserData.class).getUserLocation().getLongitude();
                         */
 
+                        finish();
+
                         LocationData locationData = new LocationData(dataSnapshot.getValue(UserData.class).getUserLocation().getLatitude(), dataSnapshot.getValue(UserData.class).getUserLocation().getLongitude());
 
-                        UserData userData = new UserData(userUid, userName, userPhoto, locationData, userToken);
+                        UserData userData = new UserData(userUid, userName, userPhoto, locationData, userMoto, userToken);
                         Intent intent = new Intent(SplashActivity.this, MapsActivity.class);
                         intent.putExtra(UserData.class.getCanonicalName(), userData);
                         startActivity(intent);

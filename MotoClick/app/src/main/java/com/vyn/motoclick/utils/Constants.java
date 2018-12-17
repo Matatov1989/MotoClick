@@ -18,10 +18,12 @@ public class Constants {
 //    public static final String ARG_FRIENDS = "friends";
 //    public static final String ARG_UID = "uid";
 
-    public static final String ARG_NAME = "name";
-    public static final String ARG_PHOTO = "photo";
-    public static final String ARG_MOTO = "moto";
-    public static final String ARG_PHONE = "phone";
-    public static final String ARG_LOCAL = "local";
+    public static final String ARG_NAME = "userName";
+    public static final String ARG_PHOTO = "userUriPhoto";
+    public static final String ARG_MOTO = "userMoto";
+    public static final String ARG_LOCATION = "userLocation";
+    public static final String ARG_TOKEN = "userFirebaseToken";
+    public static final String ARG_ID = "userId";
+
 
 }

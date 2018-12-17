@@ -129,7 +129,7 @@ public class AuthenticationActivity extends AppCompatActivity {
         Log.d(LOG_TAG, "addUserToFirebaseDatabase  ");
         LocationData locationUser = new LocationData(0.0, 0.0);
 
-        final UserData userData = new UserData(firebaseUser.getUid(), firebaseUser.getDisplayName(), firebaseUser.getPhotoUrl().toString(), locationUser, new SharedPrefUtil(getBaseContext()).getString(Constants.ARG_RECEIVER_TOKEN));
+        final UserData userData = new UserData(firebaseUser.getUid(), firebaseUser.getDisplayName(), firebaseUser.getPhotoUrl().toString(), locationUser, new SharedPrefUtil(getBaseContext()).getString(Constants.ARG_TOKEN));
 
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
         databaseReference.child(Constants.ARG_USERS).child(firebaseUser.getUid()).setValue(userData).addOnCompleteListener(new OnCompleteListener<Void>() {
