@@ -6,10 +6,7 @@
     android:background="@drawable/nav_back"
     android:gravity="bottom"
     android:orientation="vertical"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
+    android:padding="16dp"
     android:theme="@style/ThemeOverlay.AppCompat.Dark">
 
     <LinearLayout
@@ -31,9 +28,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@color/colorWhite"
             android:gravity="right"
-            android:text="@string/btnEditProfile" />
+            android:text="@string/btnEditProfile"
+            android:textColor="@color/colorWhite" />
 
     </LinearLayout>
 
@@ -41,14 +38,16 @@
         android:id="@+id/textNavUserName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Yura"
         android:paddingTop="@dimen/nav_header_vertical_spacing"
-        android:textAppearance="@style/TextAppearance.AppCompat.Body1" />
+        android:text="Yura"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+        android:textColor="@color/colorWhite" />
 
     <TextView
         android:id="@+id/textNavUserMoto"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="suzuki" />
+        android:text="suzuki"
+        android:textColor="@color/colorWhite" />
 
 </LinearLayout>

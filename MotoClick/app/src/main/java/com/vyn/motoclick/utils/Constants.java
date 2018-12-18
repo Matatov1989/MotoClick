@@ -25,5 +25,9 @@ public class Constants {
     public static final String ARG_TOKEN = "userFirebaseToken";
     public static final String ARG_ID = "userId";
 
+    public static final String ARG_LAT = "latitude";
+    public static final String ARG_LON = "longitude";
+
+
 
 }

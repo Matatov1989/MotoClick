@@ -1,5 +1,6 @@
 package com.vyn.motoclick.activities;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -8,6 +9,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -41,6 +43,8 @@ public class AuthenticationActivity extends AppCompatActivity {
 
     private SignInButton signInButton;
     private TextView btnPrivacyPolicy;
+
+    public ProgressDialog mProgressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,6 +110,7 @@ public class AuthenticationActivity extends AppCompatActivity {
     }
 
     private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
+        showProgressDialog(getString(R.string.dialogProgressAuth));
         //   Log.d(TAG, "firebaseAuthWithGoogle:" + acct.getId());
         AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
         mAuth.signInWithCredential(credential)
@@ -141,9 +146,31 @@ public class AuthenticationActivity extends AppCompatActivity {
                     Intent intent = new Intent(AuthenticationActivity.this, MapsActivity.class);
                     intent.putExtra(UserData.class.getCanonicalName(), userData);
                     startActivity(intent);
+
+                    hideProgressDialog(getString(R.string.dialogProgressAuthFinish));
+
                 } else {
+                    hideProgressDialog(getString(R.string.dialogProgressAuthFinishError));
                 }
             }
         });
+    }
+
+    //start progress dialog  +++
+    private void showProgressDialog(String message) {
+        if (mProgressDialog == null) {
+            mProgressDialog = new ProgressDialog(this);
+            mProgressDialog.setMessage(message);
+            mProgressDialog.setIndeterminate(true);
+        }
+        mProgressDialog.show();
+    }
+
+    //stop progress dialog +++
+    private void hideProgressDialog(String message) {
+        if (mProgressDialog != null && mProgressDialog.isShowing()) {
+            mProgressDialog.dismiss();
+            Toast.makeText(AuthenticationActivity.this, message, Toast.LENGTH_SHORT).show();
+        }
     }
 }

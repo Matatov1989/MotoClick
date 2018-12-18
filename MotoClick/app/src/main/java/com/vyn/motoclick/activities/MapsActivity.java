@@ -12,7 +12,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
+
+import com.getbase.floatingactionbutton.FloatingActionButton;
+
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.ActivityCompat;
@@ -56,11 +58,13 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageException;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Picasso;
 import com.vyn.motoclick.R;
 import com.vyn.motoclick.database.UserData;
+import com.vyn.motoclick.services.ServiceGetLocation;
 import com.vyn.motoclick.utils.Constants;
 
 import java.io.FileNotFoundException;
@@ -72,6 +76,7 @@ import java.util.Map;
 
 import static com.vyn.motoclick.R.id.map;
 import static java.lang.System.exit;
+
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener, GoogleApiClient.OnConnectionFailedListener {
     static final String LOG_TAG = "myLogs";
@@ -93,7 +98,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     boolean flagSelectFoto = false;
     ImageView imageDialogUser;
 
-    //   Dialog dialog, dialog1;
+    Dialog dialogSettings;
 
     UserData userData;
 
@@ -106,6 +111,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     TextView textNavUserName;
     TextView textNavUserMoto;
     TextView textCntMsg;
+    TextView deleteAccount;
 
     Uri selectedImage;
 
@@ -133,11 +139,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         userData = (UserData) getIntent().getParcelableExtra(UserData.class.getCanonicalName());
 
+    //    deleteAccountFromFirebase();
+
         Log.d(LOG_TAG, "onCreate userData " + userData.getUserName());
         Log.d(LOG_TAG, "onCreate userData " + userData.getUserUriPhoto());
         Log.d(LOG_TAG, "onCreate userData " + userData.getUserLocation().getLatitude());
         Log.d(LOG_TAG, "onCreate userData " + userData.getUserLocation().getLongitude());
-        deletForoFromFirebase();
+
         lat = userData.getUserLocation().getLatitude();
         lon = userData.getUserLocation().getLongitude();
 
@@ -156,13 +164,38 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         MenuItem menuItem = navigationView.getMenu().findItem(R.id.nav_messages);
         textCntMsg = (TextView) MenuItemCompat.getActionView(menuItem);
 
+
+        final FloatingActionButton fabGPS = (FloatingActionButton) findViewById(R.id.fabGPS);
+        fabGPS.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //     actionA.setTitle("Action A clicked");
+                Log.d(LOG_TAG, "actionA ");
+            }
+        });
+
+        final FloatingActionButton fabBtnLocation = (FloatingActionButton) findViewById(R.id.fabLocation);
+        fabBtnLocation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //      actionB.setTitle("Action B clicked");
+                Log.d(LOG_TAG, "actionB ");
+
+                startService(new Intent(MapsActivity.this, ServiceGetLocation.class).putExtra("userIdUpdateLocation", userData.getUserId()));
+            }
+        });
+
+
+        /*
         FloatingActionButton fabMyLocal = (FloatingActionButton) findViewById(R.id.fabMyLocal);
         fabMyLocal.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                getLocation();
+           //     getLocation();
+                startActivity(new Intent(MapsActivity.this, TestActivity.class));
             }
         });
+        */
 
         // Obtain the FirebaseAnalytics instance.
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
@@ -191,14 +224,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
-
-    //диалог для изменения личных данных и аву или удаления аккаунта +++
+    //dialog change user data, or photo, or delete an account +++
     private void dialogSettingsUser() {
         LayoutInflater adbInflater = LayoutInflater.from(MapsActivity.this);
         View v = adbInflater.inflate(R.layout.dialog_settings_user, null);
 
         imageDialogUser = (ImageView) v.findViewById(R.id.imageDialogUser);
-        TextView deleteAccount = (TextView) v.findViewById(R.id.btnDeleteAccount);
+        deleteAccount = (TextView) v.findViewById(R.id.btnDeleteAccount);
 
         TextInputLayout tilName = (TextInputLayout) v.findViewById(R.id.textInputLayoutName);
         final EditText editDialogTextName = (EditText) tilName.findViewById(R.id.editDialogTextName);
@@ -227,11 +259,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 Map<String, Object> userValues = new HashMap<String, Object>();
 
                 if (editDialogTextName.length() != 0) {
-
-                    Log.d(LOG_TAG, "update all  ");
-
                     userValues.put(Constants.ARG_NAME, editDialogTextName.getText().toString());
-
                     userData.setUserName(editDialogTextName.getText().toString());
                     textNavUserName.setText(userData.getUserName());
 
@@ -253,6 +281,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     toast.show();
                     dialogSettingsUser();
                 }
+                navSettingsUser.setTextColor(getResources().getColor(R.color.colorWhite));
             }
         });
         adb.setNegativeButton(R.string.btnCancel, new DialogInterface.OnClickListener() {
@@ -262,7 +291,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 
-        adb.show();
+        dialogSettings = adb.show();
 
         //chang foto вход в галерею с выбором картинки
         imageDialogUser.setOnClickListener(new View.OnClickListener() {
@@ -277,7 +306,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         deleteAccount.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //         deleteAccount.setTextColor(getResources().getColor(R.color.colorWhiteDark));
+                deleteAccount.setTextColor(getResources().getColor(R.color.colorWhiteDark));
                 dialogDelAccount();
             }
         });
@@ -347,17 +376,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
         Bitmap img = null;
         if (requestCode == REQUEST && resultCode == RESULT_OK) {
             selectedImage = data.getData();
             try {
                 img = MediaStore.Images.Media.getBitmap(getContentResolver(), selectedImage);
                 imageDialogUser.setImageBitmap(img);
-                //  flagSelectFoto = true;
-            //    uploadPickInFirebaseTest();
-                deletForoFromFirebase();
-
+                uploadPickInFirestorage();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -366,32 +391,31 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    private void deletForoFromFirebase(){
-        Log.d(LOG_TAG, "foto dreeg storageReference "+userData.getUserUriPhoto());
-  //      final StorageReference storageReference = FirebaseStorage.getInstance().getReference(FirebaseAuth.getInstance().getCurrentUser().getUid());
-        final StorageReference storageReference = FirebaseStorage.getInstance().getReferenceFromUrl(userData.getUserUriPhoto());
+    //to save in firebase storage, need to delete the previous picture +++
+    private void deletePhoroFromFirestorage(String uriPhoto) {
+        Log.d(LOG_TAG, "*** deletForoFromFirebase ***");
 
-        Log.d(LOG_TAG, "foto dreeg storageReference "+storageReference);
-
-        storageReference.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+        FirebaseStorage.getInstance().getReferenceFromUrl(uriPhoto).delete().addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
                 // File deleted successfully
                 Log.d(LOG_TAG, "foto delete ");
+
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception exception) {
                 // Uh-oh, an error occurred!
-                Log.d(LOG_TAG, "foto delete eror");
+                Log.d(LOG_TAG, "foto delete error");
             }
         });
-
-
     }
 
-    private void uploadPickInFirebaseTest() {
+    //upload a picture to firebase storage and save new link to user data +++
+    private void uploadPickInFirestorage() {
+        showProgressDialog(getString(R.string.dialogProgressUpload));
         //create link to picture
+        Log.d(LOG_TAG, "*** uploadPickInFirebaseTest *** ");
         final StorageReference storageReference = FirebaseStorage.getInstance().getReference(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(selectedImage.getLastPathSegment());
 
         UploadTask uploadTask = storageReference.putFile(selectedImage);
@@ -400,7 +424,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onFailure(@NonNull Exception exception) {
                 // Handle unsuccessful uploads
-                Log.d(LOG_TAG, "foto dreeg ");
+                Log.d(LOG_TAG, "foto upload error ");
             }
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
@@ -410,12 +434,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 Toast toast = Toast.makeText(getApplicationContext(), "фото загружено", Toast.LENGTH_SHORT);
                 toast.setGravity(Gravity.CENTER, 0, 0);
                 toast.show();
+                //           Log.d(LOG_TAG, "foto good  bucket " + taskSnapshot.getMetadata().);
+
 
             }
         }).continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
             @Override
             public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
-                Log.d(LOG_TAG, "foto task ");
+                Log.d(LOG_TAG, "foto upload task ");
                 if (!task.isSuccessful()) {
                     Log.d(LOG_TAG, "foto task ! if ");
                     throw task.getException();
@@ -428,13 +454,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onComplete(@NonNull Task<Uri> task) {
                 if (task.isSuccessful()) {
+
                     Uri downloadUri = task.getResult();
-                    Log.d(LOG_TAG, "foto onComplete " + downloadUri);
+                    Log.d(LOG_TAG, "foto upload onComplete " + downloadUri);
 
                     DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference().child(Constants.ARG_USERS).child(userData.getUserId());
                     Map<String, Object> userValues = new HashMap<String, Object>();
                     userValues.put(Constants.ARG_PHOTO, downloadUri.toString());
                     mDatabase.updateChildren(userValues);
+
+                    if (!userData.getUserUriPhoto().contains("googleusercontent"))
+                        deletePhoroFromFirestorage(userData.getUserUriPhoto());
 
                     userData.setUserUriPhoto(downloadUri.toString());
 
@@ -448,66 +478,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             .error(R.mipmap.ic_launcher)
                             .into(imageDialogUser);
 
-                } else {
+                    hideProgressDialog(getString(R.string.dialogProgressUploadFinish));
 
-                    Log.d(LOG_TAG, "foto onComplete else"  );
-                    // Handle failures
-                    // ...
+                } else {
+                    hideProgressDialog(getString(R.string.dialogProgressUploadFinishError));
                 }
             }
         });
-
-    }
-
-    //загрузка картинки в хранилище firebase +++
-    private void uploadPickInFirebase() {
-        showProgressDialog(getText(R.string.dialogProgressPick).toString());
-
-
-        StorageReference storageReference = FirebaseStorage.getInstance().getReference(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(selectedImage.getLastPathSegment());
-        storageReference.putFile(selectedImage);
-        storageReference.putFile(selectedImage).addOnCompleteListener(MapsActivity.this,
-                new OnCompleteListener<UploadTask.TaskSnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
-                        if (task.isSuccessful()) {
-                            //       myPhoto = task.getResult().getDownloadUrl().toString();
-
-                            //          updateUserToDatabase();
-                            /*
-                            Picasso.with(MapsActivity.this)
-                                    .load(task.getResult().getDownloadUrl())
-                                    .error(R.mipmap.ic_launcher)
-                                    .into(imageUser);*/
-
-                            hideProgressDialog(getText(R.string.toastPickFinish).toString());
-                        } else {
-                            task.getException();
-                        }
-                    }
-                });
-    }
-
-    //удаление аккаунта из firebase *** проверить в relase
-    private void deleteAccountFromFirebase() {
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        user.delete()
-                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            Toast toast = Toast.makeText(getApplicationContext(),
-                                    R.string.toastDelAccount,
-                                    Toast.LENGTH_SHORT);
-                            toast.setGravity(Gravity.CENTER, 0, 0);
-                            toast.show();
-                            //        dialog.dismiss();
-                        } else {
-                            Toast.makeText(MapsActivity.this, R.string.toastDelAccountError, Toast.LENGTH_SHORT).show();
-                            //    deleteAccount.setTextColor(getResources().getColor(R.color.colorBlack));
-                        }
-                    }
-                });
     }
 
     @Override
@@ -545,7 +522,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
-    //диалог удаления аккаунта +++
+    //dialog delete user account +++
     private void dialogDelAccount() {
         AlertDialog.Builder adb = new AlertDialog.Builder(this);
         adb.setCancelable(true);
@@ -553,30 +530,79 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         adb.setPositiveButton(R.string.btnOK, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
                 dialog.dismiss();
-                //      dialog1.dismiss();
-
+                dialogSettings.dismiss();
                 deleteAccountFromFirebase();
-             /*   myName = "";
-                myMoto = "";
-                myPhoto = "";*/
-
                 Picasso.get()
                         .load("1")
                         .error(R.mipmap.ic_launcher)
                         .into(imageNavUser);
 
                 textNavUserName.setText("");
+                textNavUserMoto.setText("");
                 navSettingsUser.setVisibility(View.INVISIBLE);
-                //          deleteAccount.setTextColor(getResources().getColor(R.color.colorBlack));
+                deleteAccount.setTextColor(getResources().getColor(R.color.colorBlack));
             }
         });
         adb.setNeutralButton(R.string.btnCancel, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
-                //        deleteAccount.setTextColor(getResources().getColor(R.color.colorBlack));
                 dialog.dismiss();
+                deleteAccount.setTextColor(getResources().getColor(R.color.colorBlack));
             }
         });
         adb.show();
+    }
+
+    //delete user account from firebase database *** проверить в relase
+    private void deleteAccountFromFirebase() {
+        Log.d(LOG_TAG, "** deleteAccountFromFirebase ** ");
+     /*   FirebaseAuth.getInstance().getCurrentUser().delete().addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                if (task.isSuccessful()) {
+                    Log.d(LOG_TAG, " " + task.isSuccessful());
+                    Toast toast = Toast.makeText(getApplicationContext(), R.string.toastDelAccount, Toast.LENGTH_SHORT);
+                    toast.setGravity(Gravity.CENTER, 0, 0);
+                    toast.show();
+                } else {
+                    Toast.makeText(MapsActivity.this, R.string.toastDelAccountError, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+*/
+/*
+        FirebaseDatabase.getInstance().getReference().child(Constants.ARG_USERS).child(userData.getUserId()).removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                if (task.isSuccessful()) {
+                    Log.d(LOG_TAG, " " + task.isSuccessful());
+                    Toast toast = Toast.makeText(getApplicationContext(), R.string.toastDelAccount, Toast.LENGTH_SHORT);
+                    toast.setGravity(Gravity.CENTER, 0, 0);
+                    toast.show();
+                } else {
+                    Toast.makeText(MapsActivity.this, R.string.toastDelAccountError, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+*/
+
+        Log.d(LOG_TAG, "foto delete "+FirebaseStorage.getInstance().getReference().child(userData.getUserId()));
+
+        FirebaseStorage.getInstance().getReference().child(userData.getUserId()).delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                // File deleted successfully
+                Log.d(LOG_TAG, "foto delete ");
+
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                // Uh-oh, an error occurred!
+                Log.d(LOG_TAG, "foto delete error "+exception);
+            }
+        });
+
+
     }
 
     //диалог инструкции +++
@@ -653,7 +679,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
     */
 
-    //запуск диалог прогресса +++
+    //start progress dialog  +++
     private void showProgressDialog(String message) {
         if (mProgressDialog == null) {
             mProgressDialog = new ProgressDialog(this);
@@ -663,7 +689,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mProgressDialog.show();
     }
 
-    //остановка диалог прогресса +++
+    //stop progress dialog +++
     private void hideProgressDialog(String message) {
         if (mProgressDialog != null && mProgressDialog.isShowing()) {
             mProgressDialog.dismiss();

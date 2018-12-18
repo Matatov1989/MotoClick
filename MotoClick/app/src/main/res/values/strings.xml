@@ -50,6 +50,12 @@
     <string name="btnSave">Save</string>
     <string name="btnAddFriend">Add to Friend</string>
     <string name="btnDelFriend">Remove from friends</string>
+    <string name="btnFabOnGPS">GPS on</string>
+    <string name="btnFabOffGPS">GPS off</string>
+    <string name="btnFabLocation">Location</string>
+
+
+
 
     <string name="textName">name:</string>
     <string name="textStatus">status:</string>
@@ -73,27 +79,31 @@
 
 
     <string name="dialogProgressAuth">Please wait\ncompletion of authorization.</string>
-    <string name="dialogProgressPick">Please wait\nfor the download to complete.</string>
+    <string name="dialogProgressAuthFinish">Authorization complete.</string>
+    <string name="dialogProgressAuthFinishError">An error occurred during authorization. Try again.</string>
+    <string name="dialogProgressUpload">Please wait\nfor the download to complete.</string>
+    <string name="dialogProgressUploadFinish">Loading is complete.</string>
+    <string name="dialogProgressUploadFinishError">Во время загрузки произошла ошибка. Попробуйте еще раз.</string>
 
     <string name="dialogAuth">\t\tPlease Log in!\n
-    \t\tIn order to use the chat and map of the program it is necessary for you to log in.\n
-    \t\tBy login into the program you agree to our privacy policy and terms of use of the program: Your email address, name and surname that are written in your email account, and your location will be used in the program.\n
-    </string>
+\t\tIn order to use the chat and map of the program it is necessary for you to log in.\n
+\t\tBy login into the program you agree to our privacy policy and terms of use of the program: Your email address, name and surname that are written in your email account, and your location will be used in the program.\n
+</string>
 
     <string name="dialogInstruction">\t\tWelcome to MotoClick!!!\n\n
-        \t\tThe program is intended to help motorcyclists on the road, or on vacation. Moreover, you can find friends with the common interest which is – bikes!!!\n\n
-        \t\tWhen starting the app your location is determined by your device and marked on the map. This way, nearest or passing by motorcyclists who also use this program will be able to contact you.\n\n
-        \t\tThe program provides statuses such as:\n
-        \t\t\t1)Want to ride;\n
-        \t\t\t2)On the way\n
-        \t\t\t3)At home;\n
-        \t\t\t4)Sos;\n
-        \t\t\t5)With friends;\n\n
-        \t\tChoosing a status shows your current condition for the present time.\n\n
-        \t\tThe program includes a chat room and a route builder. In order to contact other motorcyclists or to build your way to him, you need to simply mark the chosen motorcyclist on the map and select your desired function.\n\n
-        \t\tThanks for choosing us!!!\n\n
-        \t\tUse, comment and write your suggestions in the comments or personally to us!! Let\'s make the app better together!!!\n\n
-    </string>
+    \t\tThe program is intended to help motorcyclists on the road, or on vacation. Moreover, you can find friends with the common interest which is – bikes!!!\n\n
+    \t\tWhen starting the app your location is determined by your device and marked on the map. This way, nearest or passing by motorcyclists who also use this program will be able to contact you.\n\n
+    \t\tThe program provides statuses such as:\n
+    \t\t\t1)Want to ride;\n
+    \t\t\t2)On the way\n
+    \t\t\t3)At home;\n
+    \t\t\t4)Sos;\n
+    \t\t\t5)With friends;\n\n
+    \t\tChoosing a status shows your current condition for the present time.\n\n
+    \t\tThe program includes a chat room and a route builder. In order to contact other motorcyclists or to build your way to him, you need to simply mark the chosen motorcyclist on the map and select your desired function.\n\n
+    \t\tThanks for choosing us!!!\n\n
+    \t\tUse, comment and write your suggestions in the comments or personally to us!! Let\'s make the app better together!!!\n\n
+</string>
 
     <string name="dialogPermissionLocation">The app uses the device\'s GPS to determine the location of the device. It is necessary to determine your location so that the users of the program can see you and contact you. The location of the phone may be subject to an additional charge. For details, contact your mobile operator.</string>
     <string name="dialogDelAccount">Are you sure you want to delete the account and leave the program?</string>

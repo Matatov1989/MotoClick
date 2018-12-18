@@ -6,14 +6,24 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.IBinder;
 import android.support.v4.app.ActivityCompat;
+import android.util.Log;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.vyn.motoclick.utils.Constants;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class ServiceGetLocation extends Service {
+    static final String LOG_TAG = "myLogs";
     Location locationDevice;
     private FusedLocationProviderClient mFusedLocationClient;
+
+    String userId;
 
     public ServiceGetLocation() {
     }
@@ -25,6 +35,8 @@ public class ServiceGetLocation extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+
+        userId = intent.getStringExtra("userIdUpdateLocation");
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
@@ -38,6 +50,7 @@ public class ServiceGetLocation extends Service {
                 if (location != null) {
                     // Logic to handle location object
                     locationDevice = location;
+                    Log.d(LOG_TAG, "locationDevice "+locationDevice );
                     stopSelf();
                 } else {
                     stopSelf();
@@ -49,11 +62,10 @@ public class ServiceGetLocation extends Service {
 
     @Override
     public void onDestroy() {
-
-      /*  Intent intent = new Intent(this, ServiceSendMessage.class)
-                .putExtra("flagSecuritySMS", true)
-                .putExtra("lat", (locationDevice != null ? locationDevice.getLatitude() : 0.0))
-                .putExtra("lon", (locationDevice != null ? locationDevice.getLongitude() : 0.0));
-        startService(intent);*/
+        DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference().child(Constants.ARG_USERS).child(userId).child(Constants.ARG_LOCATION);
+        Map<String, Object> userValues = new HashMap<String, Object>();
+        userValues.put(Constants.ARG_LAT, locationDevice.getLatitude());
+        userValues.put(Constants.ARG_LON, locationDevice.getLongitude());
+        mDatabase.updateChildren(userValues);
     }
 }
