@@ -8,8 +8,11 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 
@@ -37,6 +40,11 @@ import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -45,6 +53,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.Continuation;
@@ -55,13 +64,19 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageException;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.google.maps.android.clustering.ClusterManager;
 import com.squareup.picasso.Picasso;
+import com.vyn.motoclick.ClusterMarker;
+import com.vyn.motoclick.MyClusterManagerRenderer;
 import com.vyn.motoclick.R;
 import com.vyn.motoclick.database.UserData;
 import com.vyn.motoclick.services.ServiceGetLocation;
@@ -71,6 +86,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -80,6 +96,11 @@ import static java.lang.System.exit;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener, GoogleApiClient.OnConnectionFailedListener {
     static final String LOG_TAG = "myLogs";
+
+    LocationCallback locationCallback;
+    private FusedLocationProviderClient mFusedLocationClient;
+    private final static long UPDATE_INTERVAL = 4 * 1000;  // 4 secs
+    private final static long FASTEST_INTERVAL = 2 * 1000; // 2 secs
 
     private FirebaseAnalytics mFirebaseAnalytics;
     /*
@@ -118,9 +139,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private static final int REQUEST = 1;
 
     private GoogleMap mMap;
+    //    private GoogleMap mGoogleMap;
     public ProgressDialog mProgressDialog;
 
     private static boolean sIsChatActivityOpen = false;
+
+    private static boolean flagEnableLocation = false;
 
     public static final int MULTIPLE_PERMISSIONS = 1; // code you want.
     String[] permissions = new String[]{
@@ -138,13 +162,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Log.d(LOG_TAG, "onCreate  ");
 
         userData = (UserData) getIntent().getParcelableExtra(UserData.class.getCanonicalName());
-
-    //    deleteAccountFromFirebase();
-
-        Log.d(LOG_TAG, "onCreate userData " + userData.getUserName());
-        Log.d(LOG_TAG, "onCreate userData " + userData.getUserUriPhoto());
-        Log.d(LOG_TAG, "onCreate userData " + userData.getUserLocation().getLatitude());
-        Log.d(LOG_TAG, "onCreate userData " + userData.getUserLocation().getLongitude());
 
         lat = userData.getUserLocation().getLatitude();
         lon = userData.getUserLocation().getLongitude();
@@ -164,13 +181,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         MenuItem menuItem = navigationView.getMenu().findItem(R.id.nav_messages);
         textCntMsg = (TextView) MenuItemCompat.getActionView(menuItem);
 
-
         final FloatingActionButton fabGPS = (FloatingActionButton) findViewById(R.id.fabGPS);
+        fabGPS.setTitle(getString(R.string.btnFabOnGPS));
         fabGPS.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //     actionA.setTitle("Action A clicked");
-                Log.d(LOG_TAG, "actionA ");
+                if (flagEnableLocation) {
+                    disableLocation();
+                    fabGPS.setTitle(getString(R.string.btnFabOnGPS));
+                    flagEnableLocation = false;
+                } else {
+                    enableLocation();
+                    fabGPS.setTitle(getString(R.string.btnFabOffGPS));
+                    flagEnableLocation = true;
+                }
             }
         });
 
@@ -179,23 +203,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onClick(View view) {
                 //      actionB.setTitle("Action B clicked");
-                Log.d(LOG_TAG, "actionB ");
-
-                startService(new Intent(MapsActivity.this, ServiceGetLocation.class).putExtra("userIdUpdateLocation", userData.getUserId()));
+                Log.d(LOG_TAG, "getLocation ");
+                getLocation();
             }
         });
-
-
-        /*
-        FloatingActionButton fabMyLocal = (FloatingActionButton) findViewById(R.id.fabMyLocal);
-        fabMyLocal.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-           //     getLocation();
-                startActivity(new Intent(MapsActivity.this, TestActivity.class));
-            }
-        });
-        */
 
         // Obtain the FirebaseAnalytics instance.
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
@@ -222,6 +233,44 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 dialogSettingsUser();
             }
         });
+    }
+
+    //get location updates
+    public void enableLocation() {
+
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        // ---------------------------------- LocationRequest ------------------------------------
+        // Create the location request to start receiving updates
+        LocationRequest mLocationRequestHighAccuracy = new LocationRequest();
+        mLocationRequestHighAccuracy.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        mLocationRequestHighAccuracy.setInterval(UPDATE_INTERVAL);
+        mLocationRequestHighAccuracy.setFastestInterval(FASTEST_INTERVAL);
+
+
+        // new Google API SDK v11 uses getFusedLocationProviderClient(this)
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        mFusedLocationClient.requestLocationUpdates(mLocationRequestHighAccuracy, locationCallback = new LocationCallback() {
+                    @Override
+                    public void onLocationResult(LocationResult locationResult) {
+                        Location location = locationResult.getLastLocation();
+                        if (location != null) {
+                            Log.d(LOG_TAG, "locationDevice " + location);
+                            DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference().child(Constants.ARG_USERS).child(userData.getUserId()).child(Constants.ARG_LOCATION);
+                            Map<String, Object> userValues = new HashMap<String, Object>();
+                            userValues.put(Constants.ARG_LAT, location.getLatitude());
+                            userValues.put(Constants.ARG_LON, location.getLongitude());
+                            mDatabase.updateChildren(userValues);
+                        }
+                    }
+                },
+                Looper.myLooper());     // Looper.myLooper tells this to repeat forever until thread is destroyed
+    }
+
+    //stop location
+    public void disableLocation() {
+        mFusedLocationClient.removeLocationUpdates(locationCallback);
     }
 
     //dialog change user data, or photo, or delete an account +++
@@ -264,7 +313,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     textNavUserName.setText(userData.getUserName());
 
                     if (editDialogTextMoto.length() != 0) {
-                        Log.d(LOG_TAG, "update moto  ");
                         userValues.put(Constants.ARG_MOTO, editDialogTextMoto.getText().toString());
                         userData.setUserMoto(editDialogTextMoto.getText().toString());
                         textNavUserMoto.setText(userData.getUserMoto());
@@ -314,7 +362,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
-
+/*
         Log.d(LOG_TAG, "onMapReady");
         mMap = googleMap;
         mMap.clear();
@@ -363,6 +411,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     .tilt(20)                                               //угол наклона
                     .build();
         }
+
+        */
+        Log.d(LOG_TAG, "onMapReady");
+        mMap = googleMap;
+        addMapMarkers();
     }
 
     private void analiz() {
@@ -393,20 +446,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     //to save in firebase storage, need to delete the previous picture +++
     private void deletePhoroFromFirestorage(String uriPhoto) {
-        Log.d(LOG_TAG, "*** deletForoFromFirebase ***");
+        Log.d(LOG_TAG, "*** deletForoFromFirebase *** " + uriPhoto);
 
         FirebaseStorage.getInstance().getReferenceFromUrl(uriPhoto).delete().addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
                 // File deleted successfully
-                Log.d(LOG_TAG, "foto delete ");
-
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception exception) {
                 // Uh-oh, an error occurred!
-                Log.d(LOG_TAG, "foto delete error");
             }
         });
     }
@@ -429,24 +479,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                // taskSnapshot.getMetadata() contains file metadata such as size, content-type, etc.
-                Log.d(LOG_TAG, "foto good " + taskSnapshot.getMetadata().getReference().getDownloadUrl());
-                Toast toast = Toast.makeText(getApplicationContext(), "фото загружено", Toast.LENGTH_SHORT);
-                toast.setGravity(Gravity.CENTER, 0, 0);
-                toast.show();
-                //           Log.d(LOG_TAG, "foto good  bucket " + taskSnapshot.getMetadata().);
-
-
+                if (!userData.getUserUriPhoto().contains("googleusercontent"))
+                    deletePhoroFromFirestorage(userData.getUserUriPhoto());
             }
         }).continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
             @Override
             public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
-                Log.d(LOG_TAG, "foto upload task ");
                 if (!task.isSuccessful()) {
-                    Log.d(LOG_TAG, "foto task ! if ");
                     throw task.getException();
                 }
-
                 // Continue with the task to get the download URL
                 return storageReference.getDownloadUrl();
             }
@@ -454,17 +495,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onComplete(@NonNull Task<Uri> task) {
                 if (task.isSuccessful()) {
-
                     Uri downloadUri = task.getResult();
-                    Log.d(LOG_TAG, "foto upload onComplete " + downloadUri);
 
                     DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference().child(Constants.ARG_USERS).child(userData.getUserId());
                     Map<String, Object> userValues = new HashMap<String, Object>();
                     userValues.put(Constants.ARG_PHOTO, downloadUri.toString());
                     mDatabase.updateChildren(userValues);
-
-                    if (!userData.getUserUriPhoto().contains("googleusercontent"))
-                        deletePhoroFromFirestorage(userData.getUserUriPhoto());
 
                     userData.setUserUriPhoto(downloadUri.toString());
 
@@ -488,39 +524,44 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     @Override
-    protected void onResume() {
+    public void onResume() {
         super.onResume();
-        Log.d(LOG_TAG, "onResume  ");
+        //     mMapView.onResume();
+        Log.d(LOG_TAG, "onResume");
+        startUserLocationsRunnable(); // update user locations every 'LOCATION_UPDATE_INTERVAL'
     }
 
+    @Override
+    public void onPause() {
+        //    mMapView.onPause();
+        stopLocationUpdates(); // stop updating user locations
+        super.onPause();
+    }
 
+    //update user location
     private void getLocation() {
         Log.d(LOG_TAG, "getLocation");
-    /*    locationGPS = new LocationGPS(MapsActivity.this);
-        // check if GPS enabled
-        Log.d(LOG_TAG, "getLocation check = " + locationGPS.canGetLocation());
-        if (locationGPS.canGetLocation()) {
-            Log.d(LOG_TAG, "getLocation check = " + locationGPS.canGetLocation());
-            location = new Location(locationGPS.getLatitude(), locationGPS.getLongitude());
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-            if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-                DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference().child("users").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("location");
-                Map<String, Object> userValues = new HashMap<String, Object>();
-                userValues.put("latitude", location.getLatitude());
-                userValues.put("longitude", location.getLongitude());
-                mDatabase.updateChildren(userValues);
-            }
-            //    return location;
-        } else {
-            Log.d(LOG_TAG, "win getLocation lat = " + locationGPS.getLatitude());
-            location = new Location(locationGPS.getLatitude(), locationGPS.getLongitude());
-            locationGPS.showSettingsAlert();
-            //     return location;
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            //       return;
         }
-        locationGPS.stopUsingGPS();
-        Log.d(LOG_TAG, "getLocation ret = " + location);*/
+        mFusedLocationClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
+            @Override
+            public void onSuccess(final Location location) {
+                // Got last known location. In some rare situations this can be null.
+                if (location != null) {
+                    Log.d(LOG_TAG, "locationDevice " + location);
+                    DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference().child(Constants.ARG_USERS).child(userData.getUserId()).child(Constants.ARG_LOCATION);
+                    Map<String, Object> userValues = new HashMap<String, Object>();
+                    userValues.put(Constants.ARG_LAT, location.getLatitude());
+                    userValues.put(Constants.ARG_LON, location.getLongitude());
+                    mDatabase.updateChildren(userValues);
+                } else {
+                }
+            }
+        });
     }
-
 
     //dialog delete user account +++
     private void dialogDelAccount() {
@@ -554,22 +595,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     //delete user account from firebase database *** проверить в relase
     private void deleteAccountFromFirebase() {
-        Log.d(LOG_TAG, "** deleteAccountFromFirebase ** ");
-     /*   FirebaseAuth.getInstance().getCurrentUser().delete().addOnCompleteListener(new OnCompleteListener<Void>() {
-            @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                if (task.isSuccessful()) {
-                    Log.d(LOG_TAG, " " + task.isSuccessful());
-                    Toast toast = Toast.makeText(getApplicationContext(), R.string.toastDelAccount, Toast.LENGTH_SHORT);
-                    toast.setGravity(Gravity.CENTER, 0, 0);
-                    toast.show();
-                } else {
-                    Toast.makeText(MapsActivity.this, R.string.toastDelAccountError, Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-*/
-/*
+        //remove a picture
+        if (!userData.getUserUriPhoto().contains("googleusercontent"))
+            deletePhoroFromFirestorage(userData.getUserUriPhoto());
+
+        //remove a user data
         FirebaseDatabase.getInstance().getReference().child(Constants.ARG_USERS).child(userData.getUserId()).removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
@@ -583,26 +613,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }
             }
         });
-*/
 
-        Log.d(LOG_TAG, "foto delete "+FirebaseStorage.getInstance().getReference().child(userData.getUserId()));
-
-        FirebaseStorage.getInstance().getReference().child(userData.getUserId()).delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+        //remove an accont
+        FirebaseAuth.getInstance().getCurrentUser().delete().addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
-            public void onSuccess(Void aVoid) {
-                // File deleted successfully
-                Log.d(LOG_TAG, "foto delete ");
-
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception exception) {
-                // Uh-oh, an error occurred!
-                Log.d(LOG_TAG, "foto delete error "+exception);
+            public void onComplete(@NonNull Task<Void> task) {
+                if (task.isSuccessful()) {
+                    Log.d(LOG_TAG, " " + task.isSuccessful());
+                    Toast toast = Toast.makeText(getApplicationContext(), R.string.toastDelAccount, Toast.LENGTH_SHORT);
+                    toast.setGravity(Gravity.CENTER, 0, 0);
+                    toast.show();
+                } else {
+                    Toast.makeText(MapsActivity.this, R.string.toastDelAccountError, Toast.LENGTH_SHORT).show();
+                }
             }
         });
-
-
     }
 
     //диалог инструкции +++
@@ -807,5 +832,161 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     public static void setChatActivityOpen(boolean isChatActivityOpen) {
         MapsActivity.sIsChatActivityOpen = isChatActivityOpen;
+    }
+
+
+    private Handler mHandler = new Handler();
+    private Runnable mRunnable;
+    private static final int LOCATION_UPDATE_INTERVAL = 3000;
+
+    private void startUserLocationsRunnable() {
+
+        mHandler.postDelayed(mRunnable = new Runnable() {
+            @Override
+            public void run() {
+                retrieveUserLocations();
+                mHandler.postDelayed(mRunnable, LOCATION_UPDATE_INTERVAL);
+            }
+        }, LOCATION_UPDATE_INTERVAL);
+    }
+
+    private void stopLocationUpdates() {
+        mHandler.removeCallbacks(mRunnable);
+    }
+
+    private ArrayList<UserData> userListData = new ArrayList<>();
+
+    private void retrieveUserLocations() {
+        Log.d(LOG_TAG, "retrieveUserLocations  ");
+        try {
+            Log.d(LOG_TAG, "retrieveUserLocations mClusterMarkers " + mClusterMarkers.size());
+            for (final ClusterMarker clusterMarker : mClusterMarkers) {
+                Log.d(LOG_TAG, "retrieveUserLocations clusterMarker " + clusterMarker);
+
+                FirebaseDatabase.getInstance().getReference().child(Constants.ARG_USERS).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        Iterator<DataSnapshot> dataSnapshots = dataSnapshot.getChildren().iterator();
+
+                        while (dataSnapshots.hasNext()) {
+                            DataSnapshot dataSnapshotChild = dataSnapshots.next();
+                            UserData user = dataSnapshotChild.getValue(UserData.class);
+                            //   userListData.add(user);
+
+                            Log.d(LOG_TAG, "retrieveUserLocations  " + user.getUserLocation().getLatitude() + " " + user.getUserName());
+
+              /*
+                    LatLng updatedLatLng = new LatLng(user.getUserLocation().getLatitude(), user.getUserLocation().getLongitude());
+                    mMap.setp
+                    mMap.setSnippet(user.getUserName());
+                    mMap.setTag(user);
+
+                    */
+
+                            // update the location
+
+                            for (int i = 0; i < mClusterMarkers.size(); i++) {
+                                Log.d(LOG_TAG, "retrieveUserLocations  mClusterMarkers.size() " + mClusterMarkers.size());
+                                try {
+                                    if (mClusterMarkers.get(i).getUser().getUserId().equals(user.getUserId())) {
+
+                                        LatLng updatedLatLng = new LatLng(
+                                                user.getUserLocation().getLatitude(),
+                                                user.getUserLocation().getLongitude()
+                                        );
+
+                                        mClusterMarkers.get(i).setPosition(updatedLatLng);
+                                        mClusterManagerRenderer.setUpdateMarker(mClusterMarkers.get(i));
+                                    }
+                                } catch (NullPointerException e) {
+                                }
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                    }
+                });
+            }
+        } catch (IllegalStateException e) {
+        }
+    }
+
+    private MyClusterManagerRenderer mClusterManagerRenderer;
+    private ClusterManager<ClusterMarker> mClusterManager;
+    private ArrayList<ClusterMarker> mClusterMarkers = new ArrayList<>();
+    //  private LocationData locationData;
+
+    private void addMapMarkers() {
+        Log.d(LOG_TAG, "addMapMarkers");
+        if (mMap != null) {
+            Log.d(LOG_TAG, "addMapMarkers !mMap " + mMap);
+            if (mClusterManager == null) {
+                Log.d(LOG_TAG, "addMapMarkers mClusterManager 1 " + mClusterManager);
+                mClusterManager = new ClusterManager<ClusterMarker>(getApplicationContext(), mMap);
+                Log.d(LOG_TAG, "addMapMarkers mClusterManager 2 " + mClusterManager);
+            }
+            if (mClusterManagerRenderer == null) {
+                Log.d(LOG_TAG, "addMapMarkers mClusterManagerRenderer " + mClusterManagerRenderer);
+                mClusterManagerRenderer = new MyClusterManagerRenderer(
+                        this,
+                        mMap,
+                        mClusterManager
+                );
+                mClusterManager.setRenderer(mClusterManagerRenderer);
+            }
+            Log.d(LOG_TAG, "addMapMarkers mClusterManager " + mClusterManager);
+            Log.d(LOG_TAG, "addMapMarkers userListData " + userListData.size());
+            for (UserData user : userListData) {
+
+                try {
+                    String snippet = "";
+                    if (user.getUserId().equals(FirebaseAuth.getInstance().getUid())) {
+                        snippet = "This is you";
+                    } else {
+                        snippet = "Determine route to " + user.getUserName() + "?";
+                    }
+
+                    int avatar = R.drawable.ic_motorcycle; // set the default avatar
+                    try {
+                        avatar = Integer.parseInt(user.getUserUriPhoto());
+                    } catch (NumberFormatException e) {
+                    }
+                    ClusterMarker newClusterMarker = new ClusterMarker(
+                            new LatLng(user.getUserLocation().getLatitude(), user.getUserLocation().getLongitude()),
+                            user.getUserName(),
+                            snippet,
+                            avatar,
+                            user
+                    );
+                    mClusterManager.addItem(newClusterMarker);
+                    mClusterMarkers.add(newClusterMarker);
+                    Log.d(LOG_TAG, "addMapMarkers mClusterMarkers size "+mClusterMarkers.size());
+
+                } catch (NullPointerException e) {
+                }
+            }
+            mClusterManager.cluster();
+            //      setCameraView();
+        }
+    }
+
+    private LatLngBounds mMapBoundary;
+
+    private void setCameraView() {
+        Log.d(LOG_TAG, "setCameraView");
+        // Set a boundary to start
+        double bottomBoundary = userData.getUserLocation().getLatitude() - .1;
+        double leftBoundary = userData.getUserLocation().getLongitude() - .1;
+        double topBoundary = userData.getUserLocation().getLatitude() + .1;
+        double rightBoundary = userData.getUserLocation().getLongitude() + .1;
+
+        mMapBoundary = new LatLngBounds(
+                new LatLng(bottomBoundary, leftBoundary),
+                new LatLng(topBoundary, rightBoundary)
+        );
+
+        mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(mMapBoundary, 0));
     }
 }
