@@ -14,6 +14,9 @@
 - Notification
 - Database
 - Parcelable
+- Comparator
+- ClusterMarker
+- Chat
 
 ---
 
