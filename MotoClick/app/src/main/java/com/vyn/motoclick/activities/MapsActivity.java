@@ -16,13 +16,14 @@ import android.os.Looper;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.getbase.floatingactionbutton.FloatingActionButton;
 
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -45,17 +46,14 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -63,23 +61,20 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageException;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.google.maps.android.clustering.ClusterManager;
-import com.squareup.picasso.Picasso;
 import com.vyn.motoclick.ClusterMarker;
 import com.vyn.motoclick.MyClusterManagerRenderer;
 import com.vyn.motoclick.R;
+import com.vyn.motoclick.database.LocationData;
 import com.vyn.motoclick.database.UserData;
-import com.vyn.motoclick.services.ServiceGetLocation;
 import com.vyn.motoclick.utils.Constants;
 
 import java.io.FileNotFoundException;
@@ -87,14 +82,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import static com.vyn.motoclick.R.id.map;
 import static java.lang.System.exit;
 
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener, GoogleApiClient.OnConnectionFailedListener {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener, GoogleApiClient.OnConnectionFailedListener, GoogleMap.OnInfoWindowClickListener {
     static final String LOG_TAG = "myLogs";
 
     LocationCallback locationCallback;
@@ -103,29 +97,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private final static long FASTEST_INTERVAL = 2 * 1000; // 2 secs
 
     private FirebaseAnalytics mFirebaseAnalytics;
-    /*
-        String myName;
-        String myPhoto;
-        String myMoto;
 
-        String myUid;
-        String myToken;*/
     double lat, lon;
 
     static public ArrayList<UserData> usersArrList = new ArrayList<>();
 
-    String btnAddOrDel;
-
-    boolean flagSelectFoto = false;
     ImageView imageDialogUser;
 
     Dialog dialogSettings;
 
     UserData userData;
-
-    ImageView dialogImageUser;
-    TextView dialogNameUser;
-    TextView dialogMotoUser;
 
     ImageView imageNavUser;
     TextView navSettingsUser;
@@ -146,10 +127,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private static boolean flagEnableLocation = false;
 
-    public static final int MULTIPLE_PERMISSIONS = 1; // code you want.
-    String[] permissions = new String[]{
-            android.Manifest.permission.ACCESS_FINE_LOCATION,
-    };
+    private MapView mMapView;
+
+    RequestOptions requestOptions ;
+    private LatLngBounds mMapBoundary;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -159,14 +140,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(map);
         mapFragment.getMapAsync(this);
 
+        //      mMapView = (MapView) findViewById(R.id.map);
+
         Log.d(LOG_TAG, "onCreate  ");
+        requestOptions = new RequestOptions()
+                .placeholder(R.mipmap.ic_launcher)
+                .error(R.mipmap.ic_launcher);
+
 
         userData = (UserData) getIntent().getParcelableExtra(UserData.class.getCanonicalName());
 
         lat = userData.getUserLocation().getLatitude();
         lon = userData.getUserLocation().getLongitude();
-
-        checkPermissions();
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 
@@ -217,9 +202,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         textNavUserName = (TextView) headerView.findViewById(R.id.textNavUserName);
         textNavUserMoto = (TextView) headerView.findViewById(R.id.textNavUserMoto);
 
-        Picasso.get()
+        Glide.with(this)
+                .setDefaultRequestOptions(requestOptions)
                 .load(userData.getUserUriPhoto())
-                .error(R.mipmap.ic_launcher)
                 .into(imageNavUser);
 
         textNavUserName.setText(userData.getUserName());
@@ -287,9 +272,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         TextInputLayout tilMoto = (TextInputLayout) v.findViewById(R.id.textInputLayoutMoto);
         final EditText editDialogTextMoto = (EditText) tilMoto.findViewById(R.id.editDialogTextMoto);
 
-        Picasso.get()
+        Glide.with(this)
+                .setDefaultRequestOptions(requestOptions)
                 .load(userData.getUserUriPhoto())
-                .error(R.mipmap.ic_launcher)
                 .into(imageDialogUser);
 
         editDialogTextName.setText(userData.getUserName());
@@ -362,68 +347,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
-/*
         Log.d(LOG_TAG, "onMapReady");
         mMap = googleMap;
-        mMap.clear();
-        //моя точка
-        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-            if (lat != 0 && lon != 0)
-                mMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon)).snippet("You").icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_motorcycle)));
-
-            //вид на карту
-            CameraPosition cameraPosition = new CameraPosition.Builder()
-                    .target(new LatLng(lat, lon))        //точка иерусалима
-                    .zoom(15)                                            //зум
-                    .bearing(0)                                    //поворот карт
-                    .tilt(20)                                       //угол наклона
-                    .build();
-            //И передаем полученный объект в метод newCameraPosition, получая CameraUpdate, который в свою очередь передаем в метод animateCamera
-            CameraUpdate cameraUpdate = CameraUpdateFactory.newCameraPosition(cameraPosition);
-            mMap.animateCamera(cameraUpdate);
-
-            mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
-
-                @Override
-                public boolean onMarkerClick(Marker arg0) {
-                    Log.d(LOG_TAG, "snipped " + arg0.getSnippet());
-                    Log.d(LOG_TAG, "you " + FirebaseAuth.getInstance().getCurrentUser().getUid());
-                    if (!arg0.getSnippet().toString().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
-
-                        //      int position = Integer.parseInt(arg0.getSnippet());
-                        for (int i = 0; i < usersArrList.size(); i++) {
-                            if (arg0.getSnippet().toString().equals(usersArrList.get(i).getUserId())) {
-
-                            }
-                            //              getUserFromFirebase(arg0.getSnippet());
-                            ///           dialogInfoUser(usersArrList.get(i).getNameUser(), Integer.parseInt(usersArrList.get(i).getStatus()), usersArrList.get(i).getUriPhoto(), usersArrList.get(i).getMoto(), usersArrList.get(i).getPhone(), i, usersArrList.get(i).getUid());
-                        }
-                    }
-                    return true;
-                }
-            });
-        } else //error with firebase
-        {
-            CameraPosition cameraPosition = new CameraPosition.Builder()
-                    .target(new LatLng(31.7962994, 35.1053184))       //точка иерусалима
-                    .zoom(6)                                                //зум
-                    .bearing(0)                                             //поворот карт
-                    .tilt(20)                                               //угол наклона
-                    .build();
-        }
-
-        */
-        Log.d(LOG_TAG, "onMapReady");
-        mMap = googleMap;
+//     retrieveUserLocations();
         addMapMarkers();
+        mMap.setOnInfoWindowClickListener(this);
     }
 
     private void analiz() {
-   /*     Bundle bundle = new Bundle();
-        bundle.putString(FirebaseAnalytics.Param, id);
-        bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, name);
-        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "image");
-        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);*/
+/*     Bundle bundle = new Bundle();
+     bundle.putString(FirebaseAnalytics.Param, id);
+     bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, name);
+     bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "image");
+     mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);*/
     }
 
     @Override
@@ -504,14 +440,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                     userData.setUserUriPhoto(downloadUri.toString());
 
-                    Picasso.get()
+                    Glide.with(MapsActivity.this)
+                            .setDefaultRequestOptions(requestOptions)
                             .load(userData.getUserUriPhoto())
-                            .error(R.mipmap.ic_launcher)
                             .into(imageNavUser);
 
-                    Picasso.get()
+                    Glide.with(MapsActivity.this)
+                            .setDefaultRequestOptions(requestOptions)
                             .load(userData.getUserUriPhoto())
-                            .error(R.mipmap.ic_launcher)
                             .into(imageDialogUser);
 
                     hideProgressDialog(getString(R.string.dialogProgressUploadFinish));
@@ -521,21 +457,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }
             }
         });
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        //     mMapView.onResume();
-        Log.d(LOG_TAG, "onResume");
-        startUserLocationsRunnable(); // update user locations every 'LOCATION_UPDATE_INTERVAL'
-    }
-
-    @Override
-    public void onPause() {
-        //    mMapView.onPause();
-        stopLocationUpdates(); // stop updating user locations
-        super.onPause();
     }
 
     //update user location
@@ -557,6 +478,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     userValues.put(Constants.ARG_LAT, location.getLatitude());
                     userValues.put(Constants.ARG_LON, location.getLongitude());
                     mDatabase.updateChildren(userValues);
+                    LocationData locationData = new LocationData(location.getLatitude(), location.getLongitude());
+
+                    userData.setUserLocation(locationData);
+
+                    setCameraView();
                 } else {
                 }
             }
@@ -573,10 +499,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 dialog.dismiss();
                 dialogSettings.dismiss();
                 deleteAccountFromFirebase();
-                Picasso.get()
-                        .load("1")
-                        .error(R.mipmap.ic_launcher)
+
+                Glide.with(MapsActivity.this)
+                        .setDefaultRequestOptions(requestOptions)
+                        .load("")
                         .into(imageNavUser);
+
 
                 textNavUserName.setText("");
                 textNavUserMoto.setText("");
@@ -644,65 +572,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
         adb.show();
     }
-/*
-    //диалог информация пользователей (маршрут, связаться, добавить в друзья) +++
-    private void dialogInfoUser(final UserData user) {
-        LayoutInflater adbInflater = LayoutInflater.from(MapsActivity.this);
-        View v = adbInflater.inflate(R.layout.dialog_info_user, null);
-
-        dialogImageUser = (ImageView) v.findViewById(R.id.imageUser);
-        dialogNameUser = (TextView) v.findViewById(R.id.textNameUser);
-        dialogMotoUser = (TextView) v.findViewById(R.id.textMotoUser);
-
-        Picasso.get()
-                .load(user.getUserUriPhoto())
-                .error(R.mipmap.ic_launcher)
-                .into(dialogImageUser);
-
-        dialogNameUser.setText(user.getUserName());
-        dialogMotoUser.setText(dialogMotoUser.getText().toString() + " " + user.getUserMoto());
-
-        AlertDialog.Builder adb = new AlertDialog.Builder(MapsActivity.this);
-        adb.setCancelable(true);
-        adb.setView(v);
-        adb.setIcon(android.R.drawable.ic_input_add);
-        adb.setPositiveButton(R.string.btnContact, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int which) {
-                ChatActivity.startActivity(MapsActivity.this,
-                        user.getUserName(),
-                        user.getUserId(),
-                        user.getUserFirebaseToken(),
-                        myToken);
-                dialog.dismiss();
-            }
-        });
-        adb.setNeutralButton(btnAddOrDel, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int which) {
-                //     addFriendToFirebase(usersArrList.get(posotion).getUid(), usersArrList.get(posotion).getNameUser(), usersArrList.get(posotion).getFirebaseToken());
-               if (btnAddOrDel.equals(getString(R.string.btnAddFriend)))
-                    addFriendToFirebase(user.getUid(), user.getNameUser(), user.getFirebaseToken());
-                else if (btnAddOrDel.equals(getString(R.string.btnDelFriend)))
-                    dialogDeleteFriend(user.getUid(), user.getNameUser());
-
-                dialog.dismiss();
-            }
-        });
-        adb.setNegativeButton(R.string.btnWay, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int which) {
-                String lat = String.valueOf(user.getUserLocation().getLatitude());
-                String lon = String.valueOf(user.getUserLocation().getLongitude());
-
-                Uri gmmIntentUri = Uri.parse("google.navigation:q=" + lat + "," + lon + "&mode=d&avoid=h");
-                Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
-                mapIntent.setPackage("com.google.android.apps.maps");
-                startActivity(mapIntent);
-
-                dialog.dismiss();
-            }
-        });
-        adb.show();
-    }
-    */
 
     //start progress dialog  +++
     private void showProgressDialog(String message) {
@@ -722,28 +591,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    @Override
-    public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
-            moveTaskToBack(true);
-            exit(0);
-        }
-    }
-
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-
             case R.id.nav_messages:
-                //         getCountReseivMsgFromFirebase(true);
-
-                //   dialogListMesage();
-                //         getMessagesFromFirebase();
+                startActivity(new Intent(MapsActivity.this, ContactsActivity.class));
                 break;
             case R.id.nav_instructions:
                 dialogInstructions();
@@ -775,54 +628,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-    }
-
-    public boolean checkPermissions() {
-        int result;
-        List<String> listPermissionsNeeded = new ArrayList<>();
-        for (String p : permissions) {
-            result = ContextCompat.checkSelfPermission(this, p);
-            if (result != PackageManager.PERMISSION_GRANTED)
-                listPermissionsNeeded.add(p);
-        }
-        if (!listPermissionsNeeded.isEmpty()) {
-            ActivityCompat.requestPermissions(this, listPermissionsNeeded.toArray(new String[listPermissionsNeeded.size()]), MULTIPLE_PERMISSIONS);
-            return false;
-        }
-        return true;
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        switch (requestCode) {
-            case MULTIPLE_PERMISSIONS: {
-                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
-                    showDialogOK(getText(R.string.dialogPermissionLocation).toString(), new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            switch (which) {
-                                case DialogInterface.BUTTON_POSITIVE:
-                                    checkPermissions();
-                                    break;
-                                case DialogInterface.BUTTON_NEGATIVE:
-                                    // proceed with logic by disabling the related features or quit the app.
-                                    break;
-                            }
-                        }
-                    });
-                }
-                return;
-            }
-        }
-    }
-
-    private void showDialogOK(String message, DialogInterface.OnClickListener okListener) {
-        new AlertDialog.Builder(this)
-                .setMessage(message)
-                .setPositiveButton(R.string.btnOK, okListener)
-                .setNegativeButton(R.string.btnCancel, okListener)
-                .create()
-                .show();
     }
 
     public static boolean isChatActivityOpen() {
@@ -858,77 +663,57 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void retrieveUserLocations() {
         Log.d(LOG_TAG, "retrieveUserLocations  ");
-        try {
-            Log.d(LOG_TAG, "retrieveUserLocations mClusterMarkers " + mClusterMarkers.size());
-            for (final ClusterMarker clusterMarker : mClusterMarkers) {
-                Log.d(LOG_TAG, "retrieveUserLocations clusterMarker " + clusterMarker);
 
-                FirebaseDatabase.getInstance().getReference().child(Constants.ARG_USERS).addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        Iterator<DataSnapshot> dataSnapshots = dataSnapshot.getChildren().iterator();
+        //     Log.d(LOG_TAG, "retrieveUserLocations clusterMarker " + clusterMarker);
 
-                        while (dataSnapshots.hasNext()) {
-                            DataSnapshot dataSnapshotChild = dataSnapshots.next();
-                            UserData user = dataSnapshotChild.getValue(UserData.class);
-                            //   userListData.add(user);
+        FirebaseDatabase.getInstance().getReference().child(Constants.ARG_USERS).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                userListData.clear();
 
-                            Log.d(LOG_TAG, "retrieveUserLocations  " + user.getUserLocation().getLatitude() + " " + user.getUserName());
+                Iterator<DataSnapshot> dataSnapshots = dataSnapshot.getChildren().iterator();
 
-              /*
+                int i = 0;
+                while (dataSnapshots.hasNext()) {
+                    DataSnapshot dataSnapshotChild = dataSnapshots.next();
+                    UserData user = dataSnapshotChild.getValue(UserData.class);
+                    userListData.add(user);
+
                     LatLng updatedLatLng = new LatLng(user.getUserLocation().getLatitude(), user.getUserLocation().getLongitude());
-                    mMap.setp
-                    mMap.setSnippet(user.getUserName());
-                    mMap.setTag(user);
 
-                    */
-
-                            // update the location
-
-                            for (int i = 0; i < mClusterMarkers.size(); i++) {
-                                Log.d(LOG_TAG, "retrieveUserLocations  mClusterMarkers.size() " + mClusterMarkers.size());
-                                try {
-                                    if (mClusterMarkers.get(i).getUser().getUserId().equals(user.getUserId())) {
-
-                                        LatLng updatedLatLng = new LatLng(
-                                                user.getUserLocation().getLatitude(),
-                                                user.getUserLocation().getLongitude()
-                                        );
-
-                                        mClusterMarkers.get(i).setPosition(updatedLatLng);
-                                        mClusterManagerRenderer.setUpdateMarker(mClusterMarkers.get(i));
-                                    }
-                                } catch (NullPointerException e) {
-                                }
-                            }
-                        }
+                    if (mClusterMarkers.size() != 0) {
+                        mClusterMarkers.get(i).setPosition(updatedLatLng);
+                        mClusterManagerRenderer.setUpdateMarker(mClusterMarkers.get(i++));
                     }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                    }
-                });
+                }
+                if (mClusterMarkers.size() == 0)
+                    addMapMarkers();
             }
-        } catch (IllegalStateException e) {
-        }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+        });
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        mMapView.onLowMemory();
     }
 
     private MyClusterManagerRenderer mClusterManagerRenderer;
     private ClusterManager<ClusterMarker> mClusterManager;
     private ArrayList<ClusterMarker> mClusterMarkers = new ArrayList<>();
-    //  private LocationData locationData;
 
     private void addMapMarkers() {
-        Log.d(LOG_TAG, "addMapMarkers");
+
         if (mMap != null) {
-            Log.d(LOG_TAG, "addMapMarkers !mMap " + mMap);
+
             if (mClusterManager == null) {
-                Log.d(LOG_TAG, "addMapMarkers mClusterManager 1 " + mClusterManager);
                 mClusterManager = new ClusterManager<ClusterMarker>(getApplicationContext(), mMap);
-                Log.d(LOG_TAG, "addMapMarkers mClusterManager 2 " + mClusterManager);
             }
             if (mClusterManagerRenderer == null) {
-                Log.d(LOG_TAG, "addMapMarkers mClusterManagerRenderer " + mClusterManagerRenderer);
                 mClusterManagerRenderer = new MyClusterManagerRenderer(
                         this,
                         mMap,
@@ -936,43 +721,39 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 );
                 mClusterManager.setRenderer(mClusterManagerRenderer);
             }
-            Log.d(LOG_TAG, "addMapMarkers mClusterManager " + mClusterManager);
+
             Log.d(LOG_TAG, "addMapMarkers userListData " + userListData.size());
-            for (UserData user : userListData) {
+            for (UserData userLocation : userListData) {
 
                 try {
                     String snippet = "";
-                    if (user.getUserId().equals(FirebaseAuth.getInstance().getUid())) {
+                    if (userLocation.getUserId().equals(FirebaseAuth.getInstance().getUid())) {
                         snippet = "This is you";
                     } else {
-                        snippet = "Determine route to " + user.getUserName() + "?";
+                        snippet = "Determine route to " + userLocation.getUserName() + "?";
                     }
 
                     int avatar = R.drawable.ic_motorcycle; // set the default avatar
                     try {
-                        avatar = Integer.parseInt(user.getUserUriPhoto());
+                        avatar = Integer.parseInt(userLocation.getUserUriPhoto());
                     } catch (NumberFormatException e) {
                     }
                     ClusterMarker newClusterMarker = new ClusterMarker(
-                            new LatLng(user.getUserLocation().getLatitude(), user.getUserLocation().getLongitude()),
-                            user.getUserName(),
+                            new LatLng(userLocation.getUserLocation().getLatitude(), userLocation.getUserLocation().getLongitude()),
+                            userLocation.getUserName(),
                             snippet,
                             avatar,
-                            user
+                            userLocation
                     );
                     mClusterManager.addItem(newClusterMarker);
                     mClusterMarkers.add(newClusterMarker);
-                    Log.d(LOG_TAG, "addMapMarkers mClusterMarkers size "+mClusterMarkers.size());
 
                 } catch (NullPointerException e) {
                 }
             }
             mClusterManager.cluster();
-            //      setCameraView();
         }
     }
-
-    private LatLngBounds mMapBoundary;
 
     private void setCameraView() {
         Log.d(LOG_TAG, "setCameraView");
@@ -982,11 +763,121 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         double topBoundary = userData.getUserLocation().getLatitude() + .1;
         double rightBoundary = userData.getUserLocation().getLongitude() + .1;
 
-        mMapBoundary = new LatLngBounds(
-                new LatLng(bottomBoundary, leftBoundary),
-                new LatLng(topBoundary, rightBoundary)
-        );
+        mMapBoundary = new LatLngBounds(new LatLng(bottomBoundary, leftBoundary), new LatLng(topBoundary, rightBoundary));
 
         mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(mMapBoundary, 0));
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+//             mMapView.onResume();
+        Log.d(LOG_TAG, "onResume");
+        startUserLocationsRunnable(); // update user locations every 'LOCATION_UPDATE_INTERVAL'
+    }
+
+    @Override
+    public void onPause() {
+        //         mMapView.onPause();
+        stopLocationUpdates(); // stop updating user locations
+        super.onPause();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+//        mMapView.onStart();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+  //      mMapView.onStop();
+    }
+
+    @Override
+    public void onBackPressed() {
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+            moveTaskToBack(true);
+            exit(0);
+        }
+    }
+
+    @Override
+    public void onInfoWindowClick(Marker marker) {
+        if(marker.getSnippet().equals("This is you")){
+            marker.hideInfoWindow();
+        }
+        else{
+            dialogInfoContact(marker);
+
+            /*
+            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+            builder.setMessage(marker.getSnippet())
+                    .setCancelable(true)
+                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        public void onClick(@SuppressWarnings("unused") final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                        public void onClick(final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
+                            dialog.cancel();
+                        }
+                    });
+            final AlertDialog alert = builder.create();
+            alert.show();*/
+        }
+    }
+
+    private void dialogInfoContact(Marker marker){
+        LayoutInflater adbInflater = LayoutInflater.from(MapsActivity.this);
+        View v = adbInflater.inflate(R.layout.dialog_info_user, null);
+        ImageView dialogImageUser = (ImageView) v.findViewById(R.id.imageUser);
+        TextView dialogNameUser = (TextView) v.findViewById(R.id.textNameUser);
+        TextView dialogMotoUser = (TextView) v.findViewById(R.id.textMotoUser);
+
+        Log.d(LOG_TAG, "dialogInfoContact  " + marker.getTitle());
+        Log.d(LOG_TAG, "dialogInfoContact  " );
+
+        Glide.with(MapsActivity.this)
+                .setDefaultRequestOptions(requestOptions)
+                .load(mClusterMarkers.get(mClusterMarkers.indexOf(marker.getTitle())).getUser().getUserUriPhoto())
+                .into(dialogImageUser);
+
+        dialogNameUser.setText(mClusterMarkers.get(mClusterMarkers.indexOf(marker.getTitle())).getUser().getUserName());
+
+        dialogMotoUser.setText(mClusterMarkers.get(mClusterMarkers.indexOf(marker.getTitle())).getUser().getUserMoto());
+        AlertDialog.Builder adb = new AlertDialog.Builder(MapsActivity.this);
+        adb.setCancelable(true);
+        adb.setView(v);
+        adb.setIcon(android.R.drawable.ic_input_add);
+        adb.setPositiveButton(R.string.btnContact, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+             /*   ChatActivity.startActivity(MapsActivity.this,
+                        user.getUserName(),
+                        user.getUserId(),
+                        user.getUserFirebaseToken(),
+                        myToken);*/
+                dialog.dismiss();
+            }
+        });
+        adb.setNegativeButton(R.string.btnWay, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+            /*    String lat = String.valueOf(user.getUserLocation().getLatitude());
+                String lon = String.valueOf(user.getUserLocation().getLongitude());
+                Uri gmmIntentUri = Uri.parse("google.navigation:q=" + lat + "," + lon + "&mode=d&avoid=h");
+                Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
+                mapIntent.setPackage("com.google.android.apps.maps");
+                startActivity(mapIntent);*/
+                dialog.dismiss();
+            }
+        });
+        adb.show();
     }
 }

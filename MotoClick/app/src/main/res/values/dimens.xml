@@ -28,6 +28,6 @@
     <dimen name="card_corner_radius">4dp</dimen>
     <dimen name="card_elevation">4dp</dimen>
 
-    <dimen name="custom_marker_image">50dp</dimen>
+    <dimen name="custom_marker_image">20dp</dimen>
     <dimen name="custom_marker_padding">2dp</dimen>
 </resources>

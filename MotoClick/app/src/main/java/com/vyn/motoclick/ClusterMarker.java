@@ -5,12 +5,9 @@ import com.google.maps.android.clustering.ClusterItem;
 import com.vyn.motoclick.database.UserData;
 
 public class ClusterMarker implements ClusterItem {
-
-
-
-    private LatLng position; // required field
-    private String title; // required field
-    private String snippet; // required field
+    private LatLng position;    // required field
+    private String title;       // required field
+    private String snippet;     // required field
     private int iconPicture;
     private UserData user;
 

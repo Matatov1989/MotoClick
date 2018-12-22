@@ -3,12 +3,9 @@ package com.vyn.motoclick.database;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.google.firebase.database.Exclude;
+import java.util.Comparator;
 
-import java.util.HashMap;
-import java.util.Map;
-
-public class UserData implements Parcelable {
+public class UserData implements Parcelable, Comparator<UserData> {
     public String userId;
     public String userName;
     public String userUriPhoto;
@@ -68,60 +65,18 @@ public class UserData implements Parcelable {
         this.userUriPhoto = userUriPhoto;
     }
 
+    public void setUserLocation(LocationData userLocation) {
+        this.userLocation = userLocation;
+    }
+
     public void setUserMoto(String userMoto) {
         this.userMoto = userMoto;
     }
-/*
-    @Exclude
-    public Map<String, Object> toMap() {
-        HashMap<String, Object> result = new HashMap<>();
-        result.put("userName", userName);
-        result.put("userUriPhoto", userUriPhoto);
-        result.put("userLocation", userLocation);
-        result.put("userMoto", userMoto);
-
-        return result;
-    }
-*/
-    /*
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(userId);
-        dest.writeString(userName);
-        dest.writeString(userUriPhoto);
-        dest.writeValue(userLocation);
-        dest.writeString(userFirebaseToken);
-    }
-
-    public static final Parcelable.Creator<UserData> CREATOR = new Parcelable.Creator<UserData>() {
-        public UserData createFromParcel(Parcel in) {
-            return new UserData(in);
-        }
-
-        public UserData[] newArray(int size) {
-            return new UserData[size];
-        }
-    };
-
-    private UserData(Parcel in) {
-        userId = in.readString();
-        userName = in.readString();
-        userUriPhoto = in.readString();
-        userLocation = in.readv
-        userFirebaseToken = in.readString();
-    }*/
-
 
     @Override
     public int describeContents() {
         return 0;
     }
-
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
@@ -153,4 +108,9 @@ public class UserData implements Parcelable {
             return new UserData[size];
         }
     };
+
+    @Override
+    public int compare(UserData o1, UserData o2) {
+        return  o1.getUserName().compareToIgnoreCase(o2.getUserName());
+    }
 }

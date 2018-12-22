@@ -7,13 +7,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+
 
 /**
  * Created by Yurka on 15.06.2017.
@@ -21,7 +15,7 @@ import okhttp3.Response;
 
 public class FcmNotificationBuilder {
     final String LOG_TAG = "myLogs";
-    public static final MediaType MEDIA_TYPE_JSON = MediaType.parse("application/json; charset=utf-8");
+ //   public static final MediaType MEDIA_TYPE_JSON = MediaType.parse("application/json; charset=utf-8");
     private static final String SERVER_API_KEY = "AAAAyFdIRL8:APA91bH00ocsJs0Gy60rt1RirjrG9f9I5RKoGne4MMSONK0vJaKJvqdEPYtHEgRafxQ64agfks3BuQwrgb2SsdbryfZwO22Q-NRMyY0vfszbBsAzw2eWZQ52-1JI3cXkxBa12Vy1HDvC";
     private static final String CONTENT_TYPE = "Content-Type";
     private static final String APPLICATION_JSON = "application/json";
@@ -84,7 +78,7 @@ public class FcmNotificationBuilder {
     }
 
     public void send() {
-        RequestBody requestBody = null;
+     /*   RequestBody requestBody = null;
         try {
             requestBody = RequestBody.create(MEDIA_TYPE_JSON, getValidJsonBody().toString());
         } catch (JSONException e) {
@@ -108,7 +102,7 @@ public class FcmNotificationBuilder {
             @Override
             public void onResponse(Call call, Response response) throws IOException {
             }
-        });
+        });*/
     }
 
     private JSONObject getValidJsonBody() throws JSONException {

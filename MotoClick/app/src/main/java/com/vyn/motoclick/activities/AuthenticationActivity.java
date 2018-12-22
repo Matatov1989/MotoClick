@@ -1,9 +1,14 @@
 package com.vyn.motoclick.activities;
 
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -17,7 +22,10 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
@@ -32,6 +40,9 @@ import com.vyn.motoclick.database.UserData;
 import com.vyn.motoclick.utils.Constants;
 import com.vyn.motoclick.utils.SharedPrefUtil;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class AuthenticationActivity extends AppCompatActivity {
 
     static final String LOG_TAG = "myLogs";
@@ -39,20 +50,22 @@ public class AuthenticationActivity extends AppCompatActivity {
     private static final int RC_SIGN_IN = 9001;
     private FirebaseAuth mAuth;
     private GoogleSignInClient mGoogleSignInClient;
-
+    private FusedLocationProviderClient mFusedLocationClient;
 
     private SignInButton signInButton;
     private TextView btnPrivacyPolicy;
 
     public ProgressDialog mProgressDialog;
+    LocationData locationData;
+
+    public static final int CODE_LOCATION = 1; // code you want.
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.layout_authentication);
 
-        //    Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        //    setSupportActionBar(toolbar);
+        checkPermissionLocation();
 
         // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance();
@@ -111,7 +124,6 @@ public class AuthenticationActivity extends AppCompatActivity {
 
     private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
         showProgressDialog(getString(R.string.dialogProgressAuth));
-        //   Log.d(TAG, "firebaseAuthWithGoogle:" + acct.getId());
         AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
         mAuth.signInWithCredential(credential)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
@@ -132,9 +144,9 @@ public class AuthenticationActivity extends AppCompatActivity {
     private void addUserToFirebaseDatabase(FirebaseUser firebaseUser) {
 
         Log.d(LOG_TAG, "addUserToFirebaseDatabase  ");
-        LocationData locationUser = new LocationData(0.0, 0.0);
+    //   LocationData locationUser = new LocationData(0.0, 0.0);
 
-        final UserData userData = new UserData(firebaseUser.getUid(), firebaseUser.getDisplayName(), firebaseUser.getPhotoUrl().toString(), locationUser, new SharedPrefUtil(getBaseContext()).getString(Constants.ARG_TOKEN));
+        final UserData userData = new UserData(firebaseUser.getUid(), firebaseUser.getDisplayName(), firebaseUser.getPhotoUrl().toString(), locationData, new SharedPrefUtil(getBaseContext()).getString(Constants.ARG_TOKEN));
 
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
         databaseReference.child(Constants.ARG_USERS).child(firebaseUser.getUid()).setValue(userData).addOnCompleteListener(new OnCompleteListener<Void>() {
@@ -172,5 +184,68 @@ public class AuthenticationActivity extends AppCompatActivity {
             mProgressDialog.dismiss();
             Toast.makeText(AuthenticationActivity.this, message, Toast.LENGTH_SHORT).show();
         }
+    }
+
+    //check permission on read a phone book
+    private void checkPermissionLocation() {
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, android.Manifest.permission.ACCESS_FINE_LOCATION)) {
+                dialogPermissionReadBook();
+            } else {
+                ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, CODE_LOCATION);
+            }
+        } else {
+            getLastLocation();
+        }
+    }
+
+    //dialog if user do not set permission on read a phone book
+    private void dialogPermissionReadBook() {
+        android.app.AlertDialog.Builder adb = new android.app.AlertDialog.Builder(this);
+        adb.setCancelable(false);
+        adb.setMessage(R.string.dialogPermissionLocation);
+        adb.setPositiveButton(R.string.btnOK, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                ActivityCompat.requestPermissions(AuthenticationActivity.this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, CODE_LOCATION);
+                dialog.dismiss();
+            }
+        });
+        adb.show();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case CODE_LOCATION: {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    getLastLocation();
+                } else {
+                    checkPermissionLocation();
+                }
+                return;
+            }
+        }
+    }
+
+    //update user location
+    private void getLastLocation() {
+        Log.d(LOG_TAG, "getLocation");
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            //       return;
+        }
+        mFusedLocationClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
+            @Override
+            public void onSuccess(final Location location) {
+                // Got last known location. In some rare situations this can be null.
+                if (location != null) {
+                    Log.d(LOG_TAG, "locationDevice " + location);
+                    locationData = new LocationData(location.getLatitude(), location.getLongitude());
+                } else {
+                    locationData = new LocationData(0.0, 0.0);
+                }
+            }
+        });
     }
 }
