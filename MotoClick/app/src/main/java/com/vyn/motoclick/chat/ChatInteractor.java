@@ -1,8 +1,11 @@
 package com.vyn.motoclick.chat;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -10,6 +13,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.vyn.motoclick.database.Chat;
+import com.vyn.motoclick.database.ContactData;
 import com.vyn.motoclick.fcm.FcmNotificationBuilder;
 import com.vyn.motoclick.utils.Constants;
 import com.vyn.motoclick.utils.SharedPrefUtil;
@@ -49,11 +53,14 @@ public class ChatInteractor implements ChatContract.Interactor {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.hasChild(room_type_1)) {
                     databaseReference.child(Constants.ARG_CHAT_ROOMS).child(room_type_1).child(String.valueOf(chat.timestamp)).setValue(chat);
+                    sendContactToList(room_type_1, chat.senderUid, chat.receiverUid, true);
                 } else if (dataSnapshot.hasChild(room_type_2)) {
                     databaseReference.child(Constants.ARG_CHAT_ROOMS).child(room_type_2).child(String.valueOf(chat.timestamp)).setValue(chat);
+                    sendContactToList(room_type_2, chat.receiverUid, chat.senderUid, true);
                 } else {
                     databaseReference.child(Constants.ARG_CHAT_ROOMS).child(room_type_1).child(String.valueOf(chat.timestamp)).setValue(chat);
                     getMessageFromFirebaseUser(chat.senderUid, chat.receiverUid);
+                    sendContactToList(room_type_2, chat.senderUid, chat.receiverUid, false);
                 }
                 // send push notification to the receiver
                 Log.d(LOG_TAG, "sendPushNotificationToReceiver " + chat.sender);
@@ -71,6 +78,31 @@ public class ChatInteractor implements ChatContract.Interactor {
                 mOnSendMessageListener.onSendMessageFailure("Unable to send message: " + databaseError.getMessage());
             }
         });
+    }
+
+    private void sendContactToList(String chatId, String sendeId, String receiverId, boolean flagMsg) {
+
+        //    final UserData userData = new UserData(firebaseUser.getUid(), firebaseUser.getDisplayName(), firebaseUser.getPhotoUrl().toString(), locationData, new SharedPrefUtil(getBaseContext()).getString(Constants.ARG_TOKEN));
+
+        ContactData constant = new ContactData(chatId, sendeId, flagMsg);
+
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+        databaseReference.child(Constants.ARG_USERS)
+                .child(receiverId)
+                .child(Constants.ARG_CONTACTS)
+                .child(chatId)
+                .setValue(constant).addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                Log.d(LOG_TAG, "addUserToFirebaseDatabase task.isSuccessful() " + task.isSuccessful());
+                if (task.isSuccessful()) {
+
+                } else {
+
+                }
+            }
+        });
+
     }
 
     private void sendPushNotificationToReceiver(String username,

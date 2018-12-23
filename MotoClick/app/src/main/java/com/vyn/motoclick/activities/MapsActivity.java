@@ -129,7 +129,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private MapView mMapView;
 
-    RequestOptions requestOptions ;
+    RequestOptions requestOptions;
     private LatLngBounds mMapBoundary;
 
     @Override
@@ -350,7 +350,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Log.d(LOG_TAG, "onMapReady");
         mMap = googleMap;
 //     retrieveUserLocations();
-        addMapMarkers();
+        //       addMapMarkers();
         mMap.setOnInfoWindowClickListener(this);
     }
 
@@ -596,7 +596,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public boolean onNavigationItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.nav_messages:
-                startActivity(new Intent(MapsActivity.this, ContactsActivity.class));
+                //      startActivity(new Intent(MapsActivity.this, ContactsActivity.class));
+
+                Intent intentContact = new Intent(MapsActivity.this, ContactsActivity.class);
+                intentContact.putExtra(UserData.class.getCanonicalName(), userData);
+                startActivity(intentContact);
+
                 break;
             case R.id.nav_instructions:
                 dialogInstructions();
@@ -705,6 +710,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private MyClusterManagerRenderer mClusterManagerRenderer;
     private ClusterManager<ClusterMarker> mClusterManager;
     private ArrayList<ClusterMarker> mClusterMarkers = new ArrayList<>();
+    private ArrayList<Integer> listIndex = new ArrayList<>();
 
     private void addMapMarkers() {
 
@@ -722,7 +728,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 mClusterManager.setRenderer(mClusterManagerRenderer);
             }
 
-            Log.d(LOG_TAG, "addMapMarkers userListData " + userListData.size());
+            Log.d(LOG_TAG, "addMapMarkers userListData ");
             for (UserData userLocation : userListData) {
 
                 try {
@@ -792,7 +798,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onStop() {
         super.onStop();
-  //      mMapView.onStop();
+        //      mMapView.onStop();
     }
 
     @Override
@@ -809,10 +815,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onInfoWindowClick(Marker marker) {
-        if(marker.getSnippet().equals("This is you")){
+        if (marker.getSnippet().equals("This is you")) {
             marker.hideInfoWindow();
-        }
-        else{
+        } else {
             dialogInfoContact(marker);
 
             /*
@@ -835,35 +840,37 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    private void dialogInfoContact(Marker marker){
+
+    private void dialogInfoContact(Marker marker) {
         LayoutInflater adbInflater = LayoutInflater.from(MapsActivity.this);
         View v = adbInflater.inflate(R.layout.dialog_info_user, null);
         ImageView dialogImageUser = (ImageView) v.findViewById(R.id.imageUser);
         TextView dialogNameUser = (TextView) v.findViewById(R.id.textNameUser);
         TextView dialogMotoUser = (TextView) v.findViewById(R.id.textMotoUser);
 
-        Log.d(LOG_TAG, "dialogInfoContact  " + marker.getTitle());
-        Log.d(LOG_TAG, "dialogInfoContact  " );
+        final int i = Integer.parseInt(marker.getId().replaceAll("[\\D]", ""));
+
+        Log.d(LOG_TAG, "dialogInfoContact  " + i);
 
         Glide.with(MapsActivity.this)
                 .setDefaultRequestOptions(requestOptions)
-                .load(mClusterMarkers.get(mClusterMarkers.indexOf(marker.getTitle())).getUser().getUserUriPhoto())
+                .load(mClusterMarkers.get(i).getUser().getUserUriPhoto())
                 .into(dialogImageUser);
 
-        dialogNameUser.setText(mClusterMarkers.get(mClusterMarkers.indexOf(marker.getTitle())).getUser().getUserName());
+        dialogNameUser.setText(mClusterMarkers.get(i).getUser().getUserName());
 
-        dialogMotoUser.setText(mClusterMarkers.get(mClusterMarkers.indexOf(marker.getTitle())).getUser().getUserMoto());
+        dialogMotoUser.setText(marker.getSnippet());
         AlertDialog.Builder adb = new AlertDialog.Builder(MapsActivity.this);
         adb.setCancelable(true);
         adb.setView(v);
         adb.setIcon(android.R.drawable.ic_input_add);
         adb.setPositiveButton(R.string.btnContact, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
-             /*   ChatActivity.startActivity(MapsActivity.this,
-                        user.getUserName(),
-                        user.getUserId(),
-                        user.getUserFirebaseToken(),
-                        myToken);*/
+                ChatActivity.startActivity(MapsActivity.this,
+                        mClusterMarkers.get(i).getUser().getUserName(),
+                        mClusterMarkers.get(i).getUser().getUserId(),
+                        mClusterMarkers.get(i).getUser().getUserFirebaseToken(),
+                        userData.getUserFirebaseToken());
                 dialog.dismiss();
             }
         });

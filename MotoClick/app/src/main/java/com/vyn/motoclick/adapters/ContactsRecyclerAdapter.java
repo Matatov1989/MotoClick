@@ -11,6 +11,7 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.vyn.motoclick.R;
+import com.vyn.motoclick.database.ContactData;
 import com.vyn.motoclick.database.UserData;
 
 import java.util.ArrayList;
@@ -18,9 +19,9 @@ import java.util.ArrayList;
 public class ContactsRecyclerAdapter extends RecyclerView.Adapter<ContactsRecyclerAdapter.ContactsHolder> {
 
     private Context context;
-    private ArrayList<UserData> arrayListContact;
+    private ArrayList<ContactData> arrayListContact;
 
-    public ContactsRecyclerAdapter(Context context, ArrayList<UserData> arrayListContact) {
+    public ContactsRecyclerAdapter(Context context, ArrayList<ContactData> arrayListContact) {
         this.context = context;
         this.arrayListContact = arrayListContact;
     }
@@ -34,8 +35,7 @@ public class ContactsRecyclerAdapter extends RecyclerView.Adapter<ContactsRecycl
 
     @Override
     public void onBindViewHolder(final ContactsRecyclerAdapter.ContactsHolder holder, int position) {
-        holder.textNameContact.setText(arrayListContact.get(position).getUserName());
-
+        holder.textNameContact.setText(arrayListContact.get(position).getContactName());
 
         RequestOptions requestOptions = new RequestOptions()
                 .placeholder(R.mipmap.ic_launcher)
@@ -43,18 +43,18 @@ public class ContactsRecyclerAdapter extends RecyclerView.Adapter<ContactsRecycl
 
         Glide.with(context)
                 .setDefaultRequestOptions(requestOptions)
-                .load(arrayListContact.get(position).getUserUriPhoto())
+                .load(arrayListContact.get(position).getContactUriPhoto())
                 .into(holder.imageContact);
 
         holder.imageHaveMsg.setVisibility(View.VISIBLE);
 
-   //     Log.d(LOG_TAG, "arrayListUser "+arrayListUser.get(position).getUserName() +" "+arrayListUser.get(position).getCntMsg());
-  /*      if (arrayListContact.get(position).getUid().equals(arrayListContact.get(position).getUid())){
-            if (arrayListContact.get(position).getCntMsg() != 0)
-                holder.imageHaveMsg.setVisibility(View.VISIBLE);
-            else
-                holder.imageHaveMsg.setVisibility(View.INVISIBLE);
-        }*/
+        //     Log.d(LOG_TAG, "arrayListUser "+arrayListUser.get(position).getUserName() +" "+arrayListUser.get(position).getCntMsg());
+/*      if (arrayListContact.get(position).getUid().equals(arrayListContact.get(position).getUid())){
+          if (arrayListContact.get(position).getCntMsg() != 0)
+              holder.imageHaveMsg.setVisibility(View.VISIBLE);
+          else
+              holder.imageHaveMsg.setVisibility(View.INVISIBLE);
+      }*/
 
     }
 
