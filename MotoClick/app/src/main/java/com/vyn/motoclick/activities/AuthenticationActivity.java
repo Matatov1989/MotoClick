@@ -4,13 +4,14 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.icu.util.Calendar;
 import android.location.Location;
 import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.format.Time;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
@@ -27,21 +28,20 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.GeoPoint;
 import com.vyn.motoclick.R;
-import com.vyn.motoclick.database.LocationData;
 import com.vyn.motoclick.database.UserData;
 import com.vyn.motoclick.utils.Constants;
 import com.vyn.motoclick.utils.SharedPrefUtil;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Date;
 
 public class AuthenticationActivity extends AppCompatActivity {
 
@@ -49,14 +49,15 @@ public class AuthenticationActivity extends AppCompatActivity {
 
     private static final int RC_SIGN_IN = 9001;
     private FirebaseAuth mAuth;
+    private FirebaseFirestore db;
     private GoogleSignInClient mGoogleSignInClient;
     private FusedLocationProviderClient mFusedLocationClient;
+    private GeoPoint geoPoint;
 
     private SignInButton signInButton;
     private TextView btnPrivacyPolicy;
 
     public ProgressDialog mProgressDialog;
-    LocationData locationData;
 
     public static final int CODE_LOCATION = 1; // code you want.
 
@@ -69,6 +70,7 @@ public class AuthenticationActivity extends AppCompatActivity {
 
         // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
 
         // Configure Google Sign In
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -132,7 +134,9 @@ public class AuthenticationActivity extends AppCompatActivity {
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
                             FirebaseUser user = mAuth.getCurrentUser();
-                            addUserToFirebaseDatabase(user);
+                            //       FirebaseUser user = db.getCurrentUser();
+                            //      addUserToFirebaseDatabase(user);
+                            addToFire(user);
                         } else {
                             // If sign in fails, display a message to the user.
                             //     Snackbar.make(findViewById(R.id.main_layout), "Authentication Failed.", Snackbar.LENGTH_SHORT).show();
@@ -141,28 +145,45 @@ public class AuthenticationActivity extends AppCompatActivity {
                 });
     }
 
-    private void addUserToFirebaseDatabase(FirebaseUser firebaseUser) {
-
+    private void addToFire(FirebaseUser firebaseUser) {
         Log.d(LOG_TAG, "addUserToFirebaseDatabase  ");
-    //   LocationData locationUser = new LocationData(0.0, 0.0);
+        final UserData userData = new UserData(
+                firebaseUser.getUid(),
+                firebaseUser.getDisplayName(),
+                firebaseUser.getPhotoUrl().toString(),
+                geoPoint,
+                Timestamp.now(),
+                firebaseUser.getUid(),
+                new SharedPrefUtil(getBaseContext()).getString(Constants.ARG_TOKEN));
 
-        final UserData userData = new UserData(firebaseUser.getUid(), firebaseUser.getDisplayName(), firebaseUser.getPhotoUrl().toString(), locationData, new SharedPrefUtil(getBaseContext()).getString(Constants.ARG_TOKEN));
-
-        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
-        databaseReference.child(Constants.ARG_USERS).child(firebaseUser.getUid()).setValue(userData).addOnCompleteListener(new OnCompleteListener<Void>() {
+        // Add a new document with a generated ID
+        db.collection(Constants.ARG_USERS).document(firebaseUser.getUid()).set(userData).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
-                Log.d(LOG_TAG, "addUserToFirebaseDatabase task.isSuccessful() "+task.isSuccessful());
-                if (task.isSuccessful()) {
+                hideProgressDialog(getString(R.string.dialogProgressAuthFinish));
 
-                    Intent intent = new Intent(AuthenticationActivity.this, MapsActivity.class);
-                    intent.putExtra(UserData.class.getCanonicalName(), userData);
-                    startActivity(intent);
+                Intent intent = new Intent(AuthenticationActivity.this, MapsActivity.class);
+                intent.putExtra(UserData.class.getCanonicalName(), userData);
+                startActivity(intent);
+            }
+        });
+    }
 
-                    hideProgressDialog(getString(R.string.dialogProgressAuthFinish));
-
+    //update user location
+    private void getLastLocation() {
+        Log.d(LOG_TAG, "getLocation");
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            //       return;
+        }
+        mFusedLocationClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
+            @Override
+            public void onSuccess(final Location location) {
+                // Got last known location. In some rare situations this can be null.
+                if (location != null) {
+                    Log.d(LOG_TAG, "locationDevice " + location);
+                    geoPoint = new GeoPoint(location.getLatitude(), location.getLongitude());
                 } else {
-                    hideProgressDialog(getString(R.string.dialogProgressAuthFinishError));
                 }
             }
         });
@@ -225,27 +246,5 @@ public class AuthenticationActivity extends AppCompatActivity {
                 return;
             }
         }
-    }
-
-    //update user location
-    private void getLastLocation() {
-        Log.d(LOG_TAG, "getLocation");
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            //       return;
-        }
-        mFusedLocationClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
-            @Override
-            public void onSuccess(final Location location) {
-                // Got last known location. In some rare situations this can be null.
-                if (location != null) {
-                    Log.d(LOG_TAG, "locationDevice " + location);
-                    locationData = new LocationData(location.getLatitude(), location.getLongitude());
-                } else {
-                    locationData = new LocationData(0.0, 0.0);
-                }
-            }
-        });
     }
 }

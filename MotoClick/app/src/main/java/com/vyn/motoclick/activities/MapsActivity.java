@@ -61,11 +61,12 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.GeoPoint;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -73,7 +74,6 @@ import com.google.maps.android.clustering.ClusterManager;
 import com.vyn.motoclick.ClusterMarker;
 import com.vyn.motoclick.MyClusterManagerRenderer;
 import com.vyn.motoclick.R;
-import com.vyn.motoclick.database.LocationData;
 import com.vyn.motoclick.database.UserData;
 import com.vyn.motoclick.utils.Constants;
 
@@ -81,7 +81,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import static com.vyn.motoclick.R.id.map;
@@ -97,6 +96,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private final static long FASTEST_INTERVAL = 2 * 1000; // 2 secs
 
     private FirebaseAnalytics mFirebaseAnalytics;
+    private FirebaseFirestore db;
 
     double lat, lon;
 
@@ -142,6 +142,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         //      mMapView = (MapView) findViewById(R.id.map);
 
+        db = FirebaseFirestore.getInstance();
+
         Log.d(LOG_TAG, "onCreate  ");
         requestOptions = new RequestOptions()
                 .placeholder(R.mipmap.ic_launcher)
@@ -150,8 +152,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         userData = (UserData) getIntent().getParcelableExtra(UserData.class.getCanonicalName());
 
-        lat = userData.getUserLocation().getLatitude();
-        lon = userData.getUserLocation().getLongitude();
+        Log.d(LOG_TAG, "onCreate  " + userData.getUserName());
+        Log.d(LOG_TAG, "onCreate  " + userData.getUserId());
+
+//        lat = userData.getUserGeoPoint().getLatitude();
+//        lon = userData.getUserGeoPoint().getLongitude();
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 
@@ -208,7 +213,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .into(imageNavUser);
 
         textNavUserName.setText(userData.getUserName());
-        textNavUserMoto.setText(userData.getUserMoto());
+     //   textNavUserMoto.setText(userData.getUserMoto());
 
         navSettingsUser = (TextView) headerView.findViewById(R.id.navSettingsUser);
         navSettingsUser.setOnClickListener(new View.OnClickListener() {
@@ -242,11 +247,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         Location location = locationResult.getLastLocation();
                         if (location != null) {
                             Log.d(LOG_TAG, "locationDevice " + location);
-                            DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference().child(Constants.ARG_USERS).child(userData.getUserId()).child(Constants.ARG_LOCATION);
+                      /*      DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference().child(Constants.ARG_USERS).child(userData.getUserId()).child(Constants.ARG_LOCATION);
                             Map<String, Object> userValues = new HashMap<String, Object>();
                             userValues.put(Constants.ARG_LAT, location.getLatitude());
                             userValues.put(Constants.ARG_LON, location.getLongitude());
-                            mDatabase.updateChildren(userValues);
+                            mDatabase.updateChildren(userValues);*/
                         }
                     }
                 },
@@ -278,7 +283,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .into(imageDialogUser);
 
         editDialogTextName.setText(userData.getUserName());
-        editDialogTextMoto.setText(userData.getUserMoto());
+    //    editDialogTextMoto.setText(userData.getUserMoto());
 
         editDialogTextName.setSelection(editDialogTextName.getText().toString().length());
         editDialogTextMoto.setSelection(editDialogTextMoto.getText().toString().length());
@@ -293,14 +298,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 Map<String, Object> userValues = new HashMap<String, Object>();
 
                 if (editDialogTextName.length() != 0) {
-                    userValues.put(Constants.ARG_NAME, editDialogTextName.getText().toString());
+
+                    //    userValues.put(Constants.ARG_NAME, editDialogTextName.getText().toString());
                     userData.setUserName(editDialogTextName.getText().toString());
                     textNavUserName.setText(userData.getUserName());
 
+                    db.collection(Constants.ARG_USERS).document(userData.getUserId()).update(Constants.ARG_NAME, userData.getUserName());
+
                     if (editDialogTextMoto.length() != 0) {
-                        userValues.put(Constants.ARG_MOTO, editDialogTextMoto.getText().toString());
-                        userData.setUserMoto(editDialogTextMoto.getText().toString());
-                        textNavUserMoto.setText(userData.getUserMoto());
+                        //   userValues.put(Constants.ARG_MOTO, editDialogTextMoto.getText().toString());
+                    //    userData.setUserMoto(editDialogTextMoto.getText().toString());
+                   //     textNavUserMoto.setText(userData.getUserMoto());
+                 //       db.collection(Constants.ARG_MOTO).document(userData.getUserId()).update(Constants.ARG_NAME, userData.getUserMoto());
                     }
 
                     mDatabase.updateChildren(userValues);
@@ -325,7 +334,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
 
         dialogSettings = adb.show();
-
         //chang foto вход в галерею с выбором картинки
         imageDialogUser.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -432,13 +440,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onComplete(@NonNull Task<Uri> task) {
                 if (task.isSuccessful()) {
                     Uri downloadUri = task.getResult();
-
-                    DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference().child(Constants.ARG_USERS).child(userData.getUserId());
-                    Map<String, Object> userValues = new HashMap<String, Object>();
-                    userValues.put(Constants.ARG_PHOTO, downloadUri.toString());
-                    mDatabase.updateChildren(userValues);
-
                     userData.setUserUriPhoto(downloadUri.toString());
+                    db.collection(Constants.ARG_USERS).document(userData.getUserId()).update(Constants.ARG_PHOTO, userData.getUserUriPhoto());
 
                     Glide.with(MapsActivity.this)
                             .setDefaultRequestOptions(requestOptions)
@@ -473,14 +476,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 // Got last known location. In some rare situations this can be null.
                 if (location != null) {
                     Log.d(LOG_TAG, "locationDevice " + location);
-                    DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference().child(Constants.ARG_USERS).child(userData.getUserId()).child(Constants.ARG_LOCATION);
-                    Map<String, Object> userValues = new HashMap<String, Object>();
-                    userValues.put(Constants.ARG_LAT, location.getLatitude());
-                    userValues.put(Constants.ARG_LON, location.getLongitude());
-                    mDatabase.updateChildren(userValues);
-                    LocationData locationData = new LocationData(location.getLatitude(), location.getLongitude());
 
-                    userData.setUserLocation(locationData);
+                    userData.setUserGeoPoint(new GeoPoint(location.getLatitude(), location.getLongitude()));
+                    db.collection(Constants.ARG_USERS).document(userData.getUserId()).update(Constants.ARG_LOCATION, userData.getUserGeoPoint());
 
                     setCameraView();
                 } else {
@@ -669,36 +667,33 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private void retrieveUserLocations() {
         Log.d(LOG_TAG, "retrieveUserLocations  ");
 
-        //     Log.d(LOG_TAG, "retrieveUserLocations clusterMarker " + clusterMarker);
+        db.collection(Constants.ARG_USERS)
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            int i = 0;
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                Log.d(LOG_TAG, document.getId() + " => " + document.toObject(UserData.class));
+                                UserData user = document.toObject(UserData.class);
+                                userListData.add(user);
 
-        FirebaseDatabase.getInstance().getReference().child(Constants.ARG_USERS).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                userListData.clear();
+                                LatLng updatedLatLng = new LatLng(user.getUserGeoPoint().getLatitude(), user.getUserGeoPoint().getLongitude());
 
-                Iterator<DataSnapshot> dataSnapshots = dataSnapshot.getChildren().iterator();
+                                if (mClusterMarkers.size() != 0) {
+                                    mClusterMarkers.get(i).setPosition(updatedLatLng);
+                                    mClusterManagerRenderer.setUpdateMarker(mClusterMarkers.get(i++));
+                                }
+                            }
+                        } else {
+                            Log.d(LOG_TAG, "Error getting documents: ", task.getException());
+                        }
 
-                int i = 0;
-                while (dataSnapshots.hasNext()) {
-                    DataSnapshot dataSnapshotChild = dataSnapshots.next();
-                    UserData user = dataSnapshotChild.getValue(UserData.class);
-                    userListData.add(user);
-
-                    LatLng updatedLatLng = new LatLng(user.getUserLocation().getLatitude(), user.getUserLocation().getLongitude());
-
-                    if (mClusterMarkers.size() != 0) {
-                        mClusterMarkers.get(i).setPosition(updatedLatLng);
-                        mClusterManagerRenderer.setUpdateMarker(mClusterMarkers.get(i++));
+                        if (mClusterMarkers.size() == 0)
+                            addMapMarkers();
                     }
-                }
-                if (mClusterMarkers.size() == 0)
-                    addMapMarkers();
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-            }
-        });
+                });
     }
 
     @Override
@@ -745,7 +740,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     } catch (NumberFormatException e) {
                     }
                     ClusterMarker newClusterMarker = new ClusterMarker(
-                            new LatLng(userLocation.getUserLocation().getLatitude(), userLocation.getUserLocation().getLongitude()),
+                            new LatLng(userLocation.getUserGeoPoint().getLatitude(), userLocation.getUserGeoPoint().getLongitude()),
                             userLocation.getUserName(),
                             snippet,
                             avatar,
@@ -764,10 +759,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private void setCameraView() {
         Log.d(LOG_TAG, "setCameraView");
         // Set a boundary to start
-        double bottomBoundary = userData.getUserLocation().getLatitude() - .1;
-        double leftBoundary = userData.getUserLocation().getLongitude() - .1;
-        double topBoundary = userData.getUserLocation().getLatitude() + .1;
-        double rightBoundary = userData.getUserLocation().getLongitude() + .1;
+        double bottomBoundary = userData.getUserGeoPoint().getLatitude() - .1;
+        double leftBoundary = userData.getUserGeoPoint().getLongitude() - .1;
+        double topBoundary = userData.getUserGeoPoint().getLatitude() + .1;
+        double rightBoundary = userData.getUserGeoPoint().getLongitude() + .1;
 
         mMapBoundary = new LatLngBounds(new LatLng(bottomBoundary, leftBoundary), new LatLng(topBoundary, rightBoundary));
 
@@ -819,27 +814,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             marker.hideInfoWindow();
         } else {
             dialogInfoContact(marker);
-
-            /*
-            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-
-            builder.setMessage(marker.getSnippet())
-                    .setCancelable(true)
-                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                        public void onClick(@SuppressWarnings("unused") final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
-                            dialog.dismiss();
-                        }
-                    })
-                    .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                        public void onClick(final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
-                            dialog.cancel();
-                        }
-                    });
-            final AlertDialog alert = builder.create();
-            alert.show();*/
         }
     }
-
 
     private void dialogInfoContact(Marker marker) {
         LayoutInflater adbInflater = LayoutInflater.from(MapsActivity.this);

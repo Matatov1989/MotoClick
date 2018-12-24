@@ -52,7 +52,7 @@ public class ContactsActivity extends AppCompatActivity {
 
 
     private void getContacts() {
-        Log.d(LOG_TAG, "ContactActivity " );
+      /*  Log.d(LOG_TAG, "ContactActivity " );
         arrayListContact.clear();
         FirebaseDatabase.getInstance().getReference()
                 .child(Constants.ARG_USERS)
@@ -123,5 +123,6 @@ public class ContactsActivity extends AppCompatActivity {
                     public void onCancelled(DatabaseError databaseError) {
                     }
                 });
+        */
     }
 }

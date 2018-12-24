@@ -81,7 +81,7 @@ public class ChatInteractor implements ChatContract.Interactor {
     }
 
     private void sendContactToList(String chatId, String sendeId, String receiverId, boolean flagMsg) {
-
+/*
         //    final UserData userData = new UserData(firebaseUser.getUid(), firebaseUser.getDisplayName(), firebaseUser.getPhotoUrl().toString(), locationData, new SharedPrefUtil(getBaseContext()).getString(Constants.ARG_TOKEN));
 
         ContactData constant = new ContactData(chatId, sendeId, flagMsg);
@@ -102,7 +102,7 @@ public class ChatInteractor implements ChatContract.Interactor {
                 }
             }
         });
-
+*/
     }
 
     private void sendPushNotificationToReceiver(String username,

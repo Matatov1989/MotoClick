@@ -62,10 +62,10 @@ public class ServiceGetLocation extends Service {
 
     @Override
     public void onDestroy() {
-        DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference().child(Constants.ARG_USERS).child(userId).child(Constants.ARG_LOCATION);
+  /*      DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference().child(Constants.ARG_USERS).child(userId).child(Constants.ARG_LOCATION);
         Map<String, Object> userValues = new HashMap<String, Object>();
         userValues.put(Constants.ARG_LAT, locationDevice.getLatitude());
         userValues.put(Constants.ARG_LON, locationDevice.getLongitude());
-        mDatabase.updateChildren(userValues);
+        mDatabase.updateChildren(userValues);*/
     }
 }
