@@ -23,6 +23,7 @@
 ### Firebase ###
 - Authentication
 - Realtime Database
+- Cloud Firestore
 - Cloud Storage
 - Cloud Functions
 - Cloud Messaging
