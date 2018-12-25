@@ -12,11 +12,16 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.firestore.FieldValue;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.vyn.motoclick.database.Chat;
 import com.vyn.motoclick.database.ContactData;
 import com.vyn.motoclick.fcm.FcmNotificationBuilder;
 import com.vyn.motoclick.utils.Constants;
 import com.vyn.motoclick.utils.SharedPrefUtil;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by Yurka on 15.06.2017.
@@ -24,6 +29,9 @@ import com.vyn.motoclick.utils.SharedPrefUtil;
 
 public class ChatInteractor implements ChatContract.Interactor {
     final String LOG_TAG = "myLogs";
+
+    private FirebaseFirestore db;
+
     private ChatContract.OnSendMessageListener mOnSendMessageListener;
     private ChatContract.OnGetMessagesListener mOnGetMessagesListener;
 
@@ -46,8 +54,60 @@ public class ChatInteractor implements ChatContract.Interactor {
         final String room_type_1 = chat.senderUid + "_" + chat.receiverUid;
         final String room_type_2 = chat.receiverUid + "_" + chat.senderUid;
 
-        final DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+        Map<String, Object> mapChat = new HashMap<>();
+        mapChat.put(Constants.ARG_SENDER, chat.getSenderName());
+        mapChat.put(Constants.ARG_SENDER_UID, chat.getSenderUid());
+        mapChat.put(Constants.ARG_RECEIVER, chat.getReceiverName());
+        mapChat.put(Constants.ARG_RECEIVER_UID, chat.getReceiverUid());
+        mapChat.put(Constants.ARG_MESSAGE, chat.getMessage());
+        mapChat.put(Constants.ARG_TIME, chat.getTimestamp());
 
+
+        db = FirebaseFirestore.getInstance();
+
+        //chat
+        db.collection(Constants.ARG_CHAT_ROOMS)
+                .document(chat.getSenderUid()+chat.getReceiverUid())
+                .collection(Constants.ARG_TIMES)
+                .document(String.valueOf(chat.getTimestamp().getSeconds()))
+                .set(mapChat);
+
+        //is read (false/true)
+        Map<String, Object> mapRead = new HashMap<>();
+        mapRead.put(Constants.ARG_IS_READ, true);
+
+        db.collection(Constants.ARG_CHAT_ROOMS)
+                .document(chat.getSenderUid()+chat.getReceiverUid())
+                .collection(Constants.ARG_READ)
+                .document(chat.getReceiverUid())
+                .set(mapRead);
+
+
+        //   Map<String, Object> mapContacts = new HashMap<>();
+        //  DocumentReference citiesRef = db.collection(Constants.ARG_USERS).document(chat.getReceiverUid()).getPath();
+        //   String g = db.collection(Constants.ARG_USERS).document(chat.getReceiverUid()).getPath();
+
+        //    mapRead.put(Constants.ARG_ARRAY_CONTACTS, Arrays.asList(FieldValue.arrayUnion(g) ,g));
+
+        //  Log.d(LOG_TAG, "uuuuuuuu  "+ g);
+
+
+        //add to list contacts
+        final Map<String, Object> mapAddContactReceiver = new HashMap<>();
+        mapAddContactReceiver.put(Constants.ARG_LIST_CONTACTS, FieldValue.arrayUnion(chat.getReceiverUid()));
+        db.collection(Constants.ARG_USERS).document(chat.getSenderUid()).update(mapAddContactReceiver);
+
+        final Map<String, Object> mapAddContactSender = new HashMap<>();
+        mapAddContactSender.put(Constants.ARG_LIST_CONTACTS, FieldValue.arrayUnion(chat.getSenderUid()));
+        db.collection(Constants.ARG_USERS).document(chat.getReceiverUid()).update(mapAddContactSender);
+
+
+        /*update*/
+        //   DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference().child(Constants.ARG_USERS).child(userData.getUserId());
+        //   Map<String, Object> userValues = new HashMap<String, Object>();
+
+       /*
+        final DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
         databaseReference.child(Constants.ARG_CHAT_ROOMS).getRef().addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -63,14 +123,7 @@ public class ChatInteractor implements ChatContract.Interactor {
                     sendContactToList(room_type_2, chat.senderUid, chat.receiverUid, false);
                 }
                 // send push notification to the receiver
-                Log.d(LOG_TAG, "sendPushNotificationToReceiver " + chat.sender);
-                sendPushNotificationToReceiver(
-                        chat.sender,
-                        chat.message,
-                        chat.senderUid,
-                        new SharedPrefUtil(context).getString(Constants.ARG_RECEIVER_TOKEN),
-                        receiverFirebaseToken);
-                mOnSendMessageListener.onSendMessageSuccess();
+
             }
 
             @Override
@@ -78,6 +131,16 @@ public class ChatInteractor implements ChatContract.Interactor {
                 mOnSendMessageListener.onSendMessageFailure("Unable to send message: " + databaseError.getMessage());
             }
         });
+*/
+
+
+        sendPushNotificationToReceiver(
+                chat.getSenderName(),
+                chat.getMessage(),
+                chat.getSenderUid(),
+                chat.getSenderToken(),
+                receiverFirebaseToken);
+        mOnSendMessageListener.onSendMessageSuccess();
     }
 
     private void sendContactToList(String chatId, String sendeId, String receiverId, boolean flagMsg) {
@@ -105,18 +168,14 @@ public class ChatInteractor implements ChatContract.Interactor {
 */
     }
 
-    private void sendPushNotificationToReceiver(String username,
-                                                String message,
-                                                String uid,
-                                                String firebaseToken,
-                                                String receiverFirebaseToken) {
+    private void sendPushNotificationToReceiver(String senderName, String message, String senderUid, String senderToken, String receiverToken) {
         FcmNotificationBuilder.initialize()
-                .title(username)
+                .title(senderName)
                 .message(message)
-                .username(username)
-                .uid(uid)
-                .firebaseToken(firebaseToken)
-                .receiverFirebaseToken(receiverFirebaseToken)
+                .username(senderName)
+                .uid(senderUid)
+                .firebaseToken(senderToken)
+                .receiverFirebaseToken(receiverToken)
                 .send();
     }
 
@@ -124,9 +183,8 @@ public class ChatInteractor implements ChatContract.Interactor {
     public void getMessageFromFirebaseUser(String senderUid, String receiverUid) {
         final String room_type_1 = senderUid + "_" + receiverUid;
         final String room_type_2 = receiverUid + "_" + senderUid;
-
+/*
         final DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
-
         databaseReference.child(Constants.ARG_CHAT_ROOMS).getRef().addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -201,5 +259,6 @@ public class ChatInteractor implements ChatContract.Interactor {
                 mOnGetMessagesListener.onGetMessagesFailure("Unable to get message: " + databaseError.getMessage());
             }
         });
+        */
     }
 }

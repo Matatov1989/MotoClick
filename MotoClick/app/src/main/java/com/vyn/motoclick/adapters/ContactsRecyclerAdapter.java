@@ -19,9 +19,9 @@ import java.util.ArrayList;
 public class ContactsRecyclerAdapter extends RecyclerView.Adapter<ContactsRecyclerAdapter.ContactsHolder> {
 
     private Context context;
-    private ArrayList<ContactData> arrayListContact;
+    private ArrayList<UserData> arrayListContact;
 
-    public ContactsRecyclerAdapter(Context context, ArrayList<ContactData> arrayListContact) {
+    public ContactsRecyclerAdapter(Context context, ArrayList<UserData> arrayListContact) {
         this.context = context;
         this.arrayListContact = arrayListContact;
     }
@@ -35,7 +35,7 @@ public class ContactsRecyclerAdapter extends RecyclerView.Adapter<ContactsRecycl
 
     @Override
     public void onBindViewHolder(final ContactsRecyclerAdapter.ContactsHolder holder, int position) {
-        holder.textNameContact.setText(arrayListContact.get(position).getContactName());
+        holder.textNameContact.setText(arrayListContact.get(position).getUserName());
 
         RequestOptions requestOptions = new RequestOptions()
                 .placeholder(R.mipmap.ic_launcher)
@@ -43,7 +43,7 @@ public class ContactsRecyclerAdapter extends RecyclerView.Adapter<ContactsRecycl
 
         Glide.with(context)
                 .setDefaultRequestOptions(requestOptions)
-                .load(arrayListContact.get(position).getContactUriPhoto())
+                .load(arrayListContact.get(position).getUserUriPhoto())
                 .into(holder.imageContact);
 
         holder.imageHaveMsg.setVisibility(View.VISIBLE);

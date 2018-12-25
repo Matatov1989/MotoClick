@@ -74,6 +74,7 @@ import com.google.maps.android.clustering.ClusterManager;
 import com.vyn.motoclick.ClusterMarker;
 import com.vyn.motoclick.MyClusterManagerRenderer;
 import com.vyn.motoclick.R;
+import com.vyn.motoclick.database.Chat;
 import com.vyn.motoclick.database.UserData;
 import com.vyn.motoclick.utils.Constants;
 
@@ -154,6 +155,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         Log.d(LOG_TAG, "onCreate  " + userData.getUserName());
         Log.d(LOG_TAG, "onCreate  " + userData.getUserId());
+        Log.d(LOG_TAG, "onCreate  s = " + userData.getUserListContacts().size());
 
 //        lat = userData.getUserGeoPoint().getLatitude();
 //        lon = userData.getUserGeoPoint().getLongitude();
@@ -213,7 +215,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .into(imageNavUser);
 
         textNavUserName.setText(userData.getUserName());
-     //   textNavUserMoto.setText(userData.getUserMoto());
+        //   textNavUserMoto.setText(userData.getUserMoto());
 
         navSettingsUser = (TextView) headerView.findViewById(R.id.navSettingsUser);
         navSettingsUser.setOnClickListener(new View.OnClickListener() {
@@ -283,7 +285,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .into(imageDialogUser);
 
         editDialogTextName.setText(userData.getUserName());
-    //    editDialogTextMoto.setText(userData.getUserMoto());
+        //    editDialogTextMoto.setText(userData.getUserMoto());
 
         editDialogTextName.setSelection(editDialogTextName.getText().toString().length());
         editDialogTextMoto.setSelection(editDialogTextMoto.getText().toString().length());
@@ -307,9 +309,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                     if (editDialogTextMoto.length() != 0) {
                         //   userValues.put(Constants.ARG_MOTO, editDialogTextMoto.getText().toString());
-                    //    userData.setUserMoto(editDialogTextMoto.getText().toString());
-                   //     textNavUserMoto.setText(userData.getUserMoto());
-                 //       db.collection(Constants.ARG_MOTO).document(userData.getUserId()).update(Constants.ARG_NAME, userData.getUserMoto());
+                        //    userData.setUserMoto(editDialogTextMoto.getText().toString());
+                        //     textNavUserMoto.setText(userData.getUserMoto());
+                        //       db.collection(Constants.ARG_MOTO).document(userData.getUserId()).update(Constants.ARG_NAME, userData.getUserMoto());
                     }
 
                     mDatabase.updateChildren(userValues);
@@ -824,16 +826,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         TextView dialogNameUser = (TextView) v.findViewById(R.id.textNameUser);
         TextView dialogMotoUser = (TextView) v.findViewById(R.id.textMotoUser);
 
-        final int i = Integer.parseInt(marker.getId().replaceAll("[\\D]", ""));
+        final int index = Integer.parseInt(marker.getId().replaceAll("[\\D]", ""));
 
-        Log.d(LOG_TAG, "dialogInfoContact  " + i);
+        Log.d(LOG_TAG, "dialogInfoContact  " + index);
 
         Glide.with(MapsActivity.this)
                 .setDefaultRequestOptions(requestOptions)
-                .load(mClusterMarkers.get(i).getUser().getUserUriPhoto())
+                .load(mClusterMarkers.get(index).getUser().getUserUriPhoto())
                 .into(dialogImageUser);
 
-        dialogNameUser.setText(mClusterMarkers.get(i).getUser().getUserName());
+        dialogNameUser.setText(mClusterMarkers.get(index).getUser().getUserName());
 
         dialogMotoUser.setText(marker.getSnippet());
         AlertDialog.Builder adb = new AlertDialog.Builder(MapsActivity.this);
@@ -842,11 +844,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         adb.setIcon(android.R.drawable.ic_input_add);
         adb.setPositiveButton(R.string.btnContact, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
-                ChatActivity.startActivity(MapsActivity.this,
-                        mClusterMarkers.get(i).getUser().getUserName(),
-                        mClusterMarkers.get(i).getUser().getUserId(),
-                        mClusterMarkers.get(i).getUser().getUserFirebaseToken(),
-                        userData.getUserFirebaseToken());
+                Log.d(LOG_TAG, "tokenSender  " + userData.getUserFirebaseToken());
+                Log.d(LOG_TAG, "tokenReceiver  " + mClusterMarkers.get(index).getUser().getUserFirebaseToken());
+                Chat chat = new Chat(userData.getUserName(), userData.getUserId(), userData.getUserFirebaseToken(), mClusterMarkers.get(index).getUser().getUserName(), mClusterMarkers.get(index).getUser().getUserId(), mClusterMarkers.get(index).getUser().getUserFirebaseToken());
+                ChatActivity.startActivity(MapsActivity.this, chat);
+
+              /*  ChatActivity.startActivity(MapsActivity.this,
+                        userData.getUserName(),
+                        userData.getUserId(),
+                        userData.getUserFirebaseToken(),
+                        mClusterMarkers.get(index).getUser().getUserName(),
+                        mClusterMarkers.get(index).getUser().getUserId(),
+                        mClusterMarkers.get(index).getUser().getUserFirebaseToken());*/
                 dialog.dismiss();
             }
         });

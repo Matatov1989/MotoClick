@@ -7,10 +7,13 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.vyn.motoclick.R;
 import com.vyn.motoclick.adapters.ContactsRecyclerAdapter;
 import com.vyn.motoclick.database.ContactData;
@@ -25,18 +28,22 @@ public class ContactsActivity extends AppCompatActivity {
 
     static final String LOG_TAG = "myLogs";
 
+    FirebaseFirestore db;
+
     RecyclerView recyclerContact;
     ContactsRecyclerAdapter adapter;
 
     UserData userData;
 //   private ArrayList<ContactData> contactDataArrayList = new ArrayList<>();
 
-    public ArrayList<ContactData> arrayListContact = new ArrayList<ContactData>();
+    public ArrayList<UserData> arrayListContact = new ArrayList<UserData>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.layout_contacts);
+
+        db = FirebaseFirestore.getInstance();
 
         userData = (UserData) getIntent().getParcelableExtra(UserData.class.getCanonicalName());
 
@@ -52,6 +59,40 @@ public class ContactsActivity extends AppCompatActivity {
 
 
     private void getContacts() {
+        Log.d(LOG_TAG, "ContactActivity getContacts " + userData.getUserListContacts().size());
+
+        //извлеч  тех у кого мой id
+
+
+        for (int i = 0; i < userData.getUserListContacts().size(); i++){
+
+            db.collection(Constants.ARG_USERS).document(userData.getUserId())
+                    .get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                @Override
+                public void onSuccess(DocumentSnapshot documentSnapshot) {
+                    //    City city = documentSnapshot.toObject(City.class);
+                    Log.d(LOG_TAG, "ContactActivity getContacts " + documentSnapshot.toObject(UserData.class));
+                    arrayListContact.add(documentSnapshot.toObject(UserData.class));
+
+                }
+            });
+        }
+
+
+        Collections.sort(arrayListContact, new UserData());
+        for (int i = 0; i < arrayListContact.size(); i++)
+            Log.d(LOG_TAG, "ContactActivity getContacts sort " + arrayListContact);
+
+
+        adapter = new ContactsRecyclerAdapter(ContactsActivity.this, arrayListContact);
+
+        recyclerContact.setAdapter(adapter);
+        recyclerContact.setLayoutManager(new LinearLayoutManager(ContactsActivity.this));
+
+
+
+
+
       /*  Log.d(LOG_TAG, "ContactActivity " );
         arrayListContact.clear();
         FirebaseDatabase.getInstance().getReference()

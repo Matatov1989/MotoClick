@@ -8,30 +8,30 @@ import com.google.firebase.firestore.GeoPoint;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 
 public class UserData implements Parcelable, Comparator<UserData> {
     public String userId;
     public String userName;
     public String userUriPhoto;
+    public int userTypeVehicle;
+    public String userFirebaseToken;
     public GeoPoint userGeoPoint;
     public Timestamp userTimeStamp;
-    public boolean isOnline;
-    public String userTypeVehicle;
-
-    public String userFirebaseToken;
+    public List<String> userListContacts;
+    public List<String> userListChats;
 
     public UserData() {
     }
 
-    public UserData(String userId, String userName, String userUriPhoto, GeoPoint userGeoPoint, Timestamp userTimeStamp, boolean isOnline, String userTypeVehicle, String userFirebaseToken) {
+    public UserData(String userId, String userName, String userUriPhoto, int userTypeVehicle, String userFirebaseToken, GeoPoint userGeoPoint, Timestamp userTimeStamp) {
         this.userId = userId;
         this.userName = userName;
         this.userUriPhoto = userUriPhoto;
-        this.userGeoPoint = userGeoPoint;
-        this.userTimeStamp = userTimeStamp;
-        this.isOnline = isOnline;
         this.userTypeVehicle = userTypeVehicle;
         this.userFirebaseToken = userFirebaseToken;
+        this.userGeoPoint = userGeoPoint;
+        this.userTimeStamp = userTimeStamp;
     }
 
     public String getUserId() {
@@ -58,6 +58,22 @@ public class UserData implements Parcelable, Comparator<UserData> {
         this.userUriPhoto = userUriPhoto;
     }
 
+    public int getUserTypeVehicle() {
+        return userTypeVehicle;
+    }
+
+    public void setUserTypeVehicle(int userTypeVehicle) {
+        this.userTypeVehicle = userTypeVehicle;
+    }
+
+    public String getUserFirebaseToken() {
+        return userFirebaseToken;
+    }
+
+    public void setUserFirebaseToken(String userFirebaseToken) {
+        this.userFirebaseToken = userFirebaseToken;
+    }
+
     public GeoPoint getUserGeoPoint() {
         return userGeoPoint;
     }
@@ -74,28 +90,8 @@ public class UserData implements Parcelable, Comparator<UserData> {
         this.userTimeStamp = userTimeStamp;
     }
 
-    public boolean isOnline() {
-        return isOnline;
-    }
-
-    public void setOnline(boolean online) {
-        isOnline = online;
-    }
-
-    public String getUserTypeVehicle() {
-        return userTypeVehicle;
-    }
-
-    public void setUserTypeVehicle(String userTypeVehicle) {
-        this.userTypeVehicle = userTypeVehicle;
-    }
-
-    public String getUserFirebaseToken() {
-        return userFirebaseToken;
-    }
-
-    public void setUserFirebaseToken(String userFirebaseToken) {
-        this.userFirebaseToken = userFirebaseToken;
+    public List<String> getUserListContacts() {
+        return userListContacts;
     }
 
     @Override
@@ -109,8 +105,9 @@ public class UserData implements Parcelable, Comparator<UserData> {
         dest.writeString(this.userName);
         dest.writeString(this.userUriPhoto);
         //  dest.writeString(this.userGeoPoint);
-        dest.writeString(this.userTypeVehicle);
+        dest.writeInt(this.userTypeVehicle);
         dest.writeString(this.userFirebaseToken);
+        dest.writeList(this.userListContacts);
     }
 
     protected UserData(Parcel in) {
@@ -118,8 +115,10 @@ public class UserData implements Parcelable, Comparator<UserData> {
         this.userName = in.readString();
         this.userUriPhoto = in.readString();
 //      this.userGeoPoint = in.readString();
-        this.userTypeVehicle = in.readString();
+        this.userTypeVehicle = in.readInt();
         this.userFirebaseToken = in.readString();
+        userListContacts = new ArrayList<String>();
+        in.readList(userListContacts, null);
     }
 
     public static final Parcelable.Creator<UserData> CREATOR = new Parcelable.Creator<UserData>() {

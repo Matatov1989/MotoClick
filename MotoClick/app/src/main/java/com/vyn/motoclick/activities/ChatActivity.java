@@ -16,6 +16,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.vyn.motoclick.R;
+import com.vyn.motoclick.database.Chat;
 import com.vyn.motoclick.fragments.ChatFragment;
 import com.vyn.motoclick.utils.Constants;
 
@@ -40,6 +41,20 @@ public class ChatActivity extends AppCompatActivity {
         context.startActivity(intent);
     }
 
+    public  static  void startActivity(Context context, Chat chat){
+        Intent intent = new Intent(context, ChatActivity.class);
+
+        intent.putExtra(Constants.ARG_SENDER, chat.getSenderName());
+        intent.putExtra(Constants.ARG_SENDER_UID, chat.getSenderUid());
+        intent.putExtra(Constants.ARG_SENDER_TOKEN, chat.getSenderToken());
+
+        intent.putExtra(Constants.ARG_RECEIVER, chat.getReceiverName());
+        intent.putExtra(Constants.ARG_RECEIVER_UID, chat.getReceiverUid());
+        intent.putExtra(Constants.ARG_RECEIVER_TOKEN, chat.getReceiverToken());
+
+        context.startActivity(intent);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,7 +65,7 @@ public class ChatActivity extends AppCompatActivity {
                 getSystemService(NOTIFICATION_SERVICE);
         mNotificationManager.cancelAll();
 
-     //   resetCntMsgFirebase(getIntent().getExtras().getString(Constants.ARG_RECEIVER_UID));
+        //   resetCntMsgFirebase(getIntent().getExtras().getString(Constants.ARG_RECEIVER_UID));
 
         bindViews();
         init();
@@ -62,24 +77,28 @@ public class ChatActivity extends AppCompatActivity {
 
     private void bindViews() {
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
-
+        // set the toolbar
+        setSupportActionBar(mToolbar);
+        // set toolbar title
+        mToolbar.setTitle(getIntent().getExtras().getString(Constants.ARG_RECEIVER));
     }
 
     private void init() {
-        // set the toolbar
-        setSupportActionBar(mToolbar);
+        Log.d(LOG_TAG, "ChatActivity name " + getIntent().getExtras().getString(Constants.ARG_RECEIVER));
+        Log.d(LOG_TAG, "ChatActivity id " + getIntent().getExtras().getString(Constants.ARG_RECEIVER_UID));
+        Log.d(LOG_TAG, "ChatActivity tokenR " + getIntent().getExtras().getString(Constants.ARG_RECEIVER_TOKEN));
+        Log.d(LOG_TAG, "ChatActivity tokenS" + getIntent().getExtras().getString(Constants.ARG_SENDER_TOKEN));
 
-        // set toolbar title
-        //      mToolbar.setTitle(getIntent().getExtras().getString(Constants.ARG_RECEIVER));
-        mToolbar.setTitle(getIntent().getExtras().getString(Constants.ARG_RECEIVER));
-
+        Chat chat = new Chat(getIntent().getExtras().getString(Constants.ARG_SENDER),
+                getIntent().getExtras().getString(Constants.ARG_SENDER_UID),
+                getIntent().getExtras().getString(Constants.ARG_SENDER_TOKEN),
+                getIntent().getExtras().getString(Constants.ARG_RECEIVER),
+                getIntent().getExtras().getString(Constants.ARG_RECEIVER_UID),
+                getIntent().getExtras().getString(Constants.ARG_RECEIVER_TOKEN));
         // set the register screen fragment
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.frame_layout_content_chat,
-                ChatFragment.newInstance(getIntent().getExtras().getString(Constants.ARG_RECEIVER),
-                        getIntent().getExtras().getString(Constants.ARG_RECEIVER_UID),
-                        getIntent().getExtras().getString(Constants.ARG_RECEIVER_TOKEN),
-                        getIntent().getExtras().getString(Constants.ARG_SENDER_TOKEN)),
+                ChatFragment.newInstance(chat),
                 ChatFragment.class.getSimpleName());
         fragmentTransaction.commit();
     }

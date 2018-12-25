@@ -4,14 +4,12 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.icu.util.Calendar;
 import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.format.Time;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
@@ -36,12 +34,12 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.GeoPoint;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
 import com.vyn.motoclick.R;
 import com.vyn.motoclick.database.UserData;
 import com.vyn.motoclick.utils.Constants;
-import com.vyn.motoclick.utils.SharedPrefUtil;
 
-import java.util.Date;
 
 public class AuthenticationActivity extends AppCompatActivity {
 
@@ -145,28 +143,42 @@ public class AuthenticationActivity extends AppCompatActivity {
                 });
     }
 
-    private void addToFire(FirebaseUser firebaseUser) {
-        Log.d(LOG_TAG, "addUserToFirebaseDatabase  ");
-        final UserData userData = new UserData(
-                firebaseUser.getUid(),
-                firebaseUser.getDisplayName(),
-                firebaseUser.getPhotoUrl().toString(),
-                geoPoint,
-                Timestamp.now(),
-                firebaseUser.getUid(),
-                new SharedPrefUtil(getBaseContext()).getString(Constants.ARG_TOKEN));
+    private void addToFire(final FirebaseUser firebaseUser) {
 
-        // Add a new document with a generated ID
-        db.collection(Constants.ARG_USERS).document(firebaseUser.getUid()).set(userData).addOnCompleteListener(new OnCompleteListener<Void>() {
-            @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                hideProgressDialog(getString(R.string.dialogProgressAuthFinish));
+        FirebaseInstanceId.getInstance().getInstanceId()
+                .addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<InstanceIdResult> task) {
+                        if (!task.isSuccessful()) {
+                            //      Log.w(TAG, "getInstanceId failed", task.getException());
+                            return;
+                        }
+                        // Get new Instance ID token
+                        String token = task.getResult().getToken();
 
-                Intent intent = new Intent(AuthenticationActivity.this, MapsActivity.class);
-                intent.putExtra(UserData.class.getCanonicalName(), userData);
-                startActivity(intent);
-            }
-        });
+                        Log.d(LOG_TAG, "addUserToFirebaseDatabase  ");
+                        final UserData userData = new UserData(
+                                firebaseUser.getUid(),
+                                firebaseUser.getDisplayName(),
+                                firebaseUser.getPhotoUrl().toString(),
+                                0,
+                                token,
+                                geoPoint,
+                                Timestamp.now());
+
+                        // Add a new document with a generated ID
+                        db.collection(Constants.ARG_USERS).document(firebaseUser.getUid()).set(userData).addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                hideProgressDialog(getString(R.string.dialogProgressAuthFinish));
+
+                                Intent intent = new Intent(AuthenticationActivity.this, MapsActivity.class);
+                                intent.putExtra(UserData.class.getCanonicalName(), userData);
+                                startActivity(intent);
+                            }
+                        });
+                    }
+                });
     }
 
     //update user location

@@ -19,6 +19,7 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -64,12 +65,24 @@ public class ChatFragment extends Fragment implements ChatContract.View, TextVie
 
     public static ChatFragment newInstance(String receiver, String receiverUid, String receiverToken, String senderToken) {
         Bundle args = new Bundle();
-        args.putString(ARG_RECEIVER, receiver);
-        args.putString(ARG_RECEIVER_UID, receiverUid);
+        args.putString(Constants.ARG_RECEIVER, receiver);
+        args.putString(Constants.ARG_RECEIVER_UID, receiverUid);
         args.putString(Constants.ARG_RECEIVER_TOKEN, receiverToken);
         args.putString(Constants.ARG_SENDER_TOKEN, senderToken);
 
+        ChatFragment fragment = new ChatFragment();
+        fragment.setArguments(args);
+        return fragment;
+    }
 
+    public static ChatFragment newInstance(Chat chat) {
+        Bundle args = new Bundle();
+        args.putString(Constants.ARG_SENDER, chat.getSenderName());
+        args.putString(Constants.ARG_SENDER_UID, chat.getSenderUid());
+        args.putString(Constants.ARG_SENDER_TOKEN, chat.getReceiverToken());
+        args.putString(Constants.ARG_RECEIVER, chat.getReceiverName());
+        args.putString(Constants.ARG_RECEIVER_UID, chat.getReceiverUid());
+        args.putString(Constants.ARG_RECEIVER_TOKEN, chat.getReceiverToken());
 
         ChatFragment fragment = new ChatFragment();
         fragment.setArguments(args);
@@ -119,7 +132,7 @@ public class ChatFragment extends Fragment implements ChatContract.View, TextVie
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-     //   resetCntMsgFirebase(Constants.ARG_RECEIVER_UID);
+        //   resetCntMsgFirebase(Constants.ARG_RECEIVER_UID);
         init();
 
     }
@@ -148,18 +161,20 @@ public class ChatFragment extends Fragment implements ChatContract.View, TextVie
     }
 
     private void sendMessage(String message) {
-        String sender = FirebaseAuth.getInstance().getCurrentUser().getDisplayName();
-        String senderUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        String receiver = getArguments().getString(ARG_RECEIVER);
-        String receiverUid = getArguments().getString(ARG_RECEIVER_UID);
-        //    String message = mETxtMessage.getText().toString();
+        String sender = getArguments().getString(Constants.ARG_SENDER);
+        String senderUid = getArguments().getString(Constants.ARG_SENDER_UID);
+        String senderToken = getArguments().getString(Constants.ARG_SENDER_TOKEN);
+        String receiver = getArguments().getString(Constants.ARG_RECEIVER);
+        String receiverUid = getArguments().getString(Constants.ARG_RECEIVER_UID);
+        String receiverToken = getArguments().getString(Constants.ARG_RECEIVER_TOKEN);
 
-        String receiverFirebaseToken = getArguments().getString(Constants.ARG_RECEIVER_TOKEN);
-        //     String name = FirebaseAuth.getInstance().getCurrentUser().getDisplayName();
-        Chat chat = new Chat(sender, senderUid, receiver, receiverUid, message, System.currentTimeMillis());
-        mChatPresenter.sendMessage(getActivity().getApplicationContext(), chat, receiverFirebaseToken);
 
-    //    sendToUser();
+        Chat chat = new Chat(sender, senderUid, senderToken, receiver, receiverUid, receiverToken, message, Timestamp.now());
+
+
+        mChatPresenter.sendMessage(getActivity().getApplicationContext(), chat, receiverToken);
+
+//    sendToUser();
     }
 
 
