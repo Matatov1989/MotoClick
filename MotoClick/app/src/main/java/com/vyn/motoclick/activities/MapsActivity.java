@@ -86,6 +86,7 @@ import java.util.Map;
 
 import static com.vyn.motoclick.R.id.map;
 import static java.lang.System.exit;
+import static java.lang.System.in;
 
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener, GoogleApiClient.OnConnectionFailedListener, GoogleMap.OnInfoWindowClickListener {
@@ -157,8 +158,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Log.d(LOG_TAG, "onCreate  " + userData.getUserId());
         Log.d(LOG_TAG, "onCreate  s = " + userData.getUserListContacts().size());
 
-//        lat = userData.getUserGeoPoint().getLatitude();
-//        lon = userData.getUserGeoPoint().getLongitude();
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 
@@ -222,9 +221,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onClick(View v) {
                 navSettingsUser.setTextColor(getResources().getColor(R.color.colorWhiteDark));
-                dialogSettingsUser();
+
+                Intent intent = new Intent(MapsActivity.this, EditProfileActivity.class);
+                intent.putExtra(UserData.class.getCanonicalName(), userData);
+                startActivity(intent);
             }
         });
+
+   //     startActivity(new Intent(this, InfoUserActivity.class));
     }
 
     //get location updates
@@ -265,203 +269,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mFusedLocationClient.removeLocationUpdates(locationCallback);
     }
 
-    //dialog change user data, or photo, or delete an account +++
-    private void dialogSettingsUser() {
-        LayoutInflater adbInflater = LayoutInflater.from(MapsActivity.this);
-        View v = adbInflater.inflate(R.layout.dialog_settings_user, null);
-
-        imageDialogUser = (ImageView) v.findViewById(R.id.imageDialogUser);
-        deleteAccount = (TextView) v.findViewById(R.id.btnDeleteAccount);
-
-        TextInputLayout tilName = (TextInputLayout) v.findViewById(R.id.textInputLayoutName);
-        final EditText editDialogTextName = (EditText) tilName.findViewById(R.id.editDialogTextName);
-
-        TextInputLayout tilMoto = (TextInputLayout) v.findViewById(R.id.textInputLayoutMoto);
-        final EditText editDialogTextMoto = (EditText) tilMoto.findViewById(R.id.editDialogTextMoto);
-
-        Glide.with(this)
-                .setDefaultRequestOptions(requestOptions)
-                .load(userData.getUserUriPhoto())
-                .into(imageDialogUser);
-
-        editDialogTextName.setText(userData.getUserName());
-        //    editDialogTextMoto.setText(userData.getUserMoto());
-
-        editDialogTextName.setSelection(editDialogTextName.getText().toString().length());
-        editDialogTextMoto.setSelection(editDialogTextMoto.getText().toString().length());
-
-        final AlertDialog.Builder adb = new AlertDialog.Builder(MapsActivity.this);
-        adb.setCancelable(true);
-        adb.setView(v);
-        adb.setPositiveButton(R.string.btnSave, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int which) {
-
-                DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference().child(Constants.ARG_USERS).child(userData.getUserId());
-                Map<String, Object> userValues = new HashMap<String, Object>();
-
-                if (editDialogTextName.length() != 0) {
-
-                    //    userValues.put(Constants.ARG_NAME, editDialogTextName.getText().toString());
-                    userData.setUserName(editDialogTextName.getText().toString());
-                    textNavUserName.setText(userData.getUserName());
-
-                    db.collection(Constants.ARG_USERS).document(userData.getUserId()).update(Constants.ARG_NAME, userData.getUserName());
-
-                    if (editDialogTextMoto.length() != 0) {
-                        //   userValues.put(Constants.ARG_MOTO, editDialogTextMoto.getText().toString());
-                        //    userData.setUserMoto(editDialogTextMoto.getText().toString());
-                        //     textNavUserMoto.setText(userData.getUserMoto());
-                        //       db.collection(Constants.ARG_MOTO).document(userData.getUserId()).update(Constants.ARG_NAME, userData.getUserMoto());
-                    }
-
-                    mDatabase.updateChildren(userValues);
-
-                    Toast toast = Toast.makeText(getApplicationContext(), "данные обновлены", Toast.LENGTH_SHORT);
-                    toast.setGravity(Gravity.CENTER, 0, 0);
-                    toast.show();
-                } else {
-                    Toast toast = Toast.makeText(getApplicationContext(), R.string.toastEnterName, Toast.LENGTH_SHORT);
-                    toast.setGravity(Gravity.CENTER, 0, 0);
-                    toast.show();
-                    dialogSettingsUser();
-                }
-                navSettingsUser.setTextColor(getResources().getColor(R.color.colorWhite));
-            }
-        });
-        adb.setNegativeButton(R.string.btnCancel, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int which) {
-                navSettingsUser.setTextColor(getResources().getColor(R.color.colorWhite));
-                dialog.dismiss();
-            }
-        });
-
-        dialogSettings = adb.show();
-        //chang foto вход в галерею с выбором картинки
-        imageDialogUser.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
-                photoPickerIntent.setType("image/*");
-                startActivityForResult(photoPickerIntent, REQUEST);
-            }
-        });
-
-        deleteAccount.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                deleteAccount.setTextColor(getResources().getColor(R.color.colorWhiteDark));
-                dialogDelAccount();
-            }
-        });
-    }
-
     @Override
     public void onMapReady(GoogleMap googleMap) {
         Log.d(LOG_TAG, "onMapReady");
         mMap = googleMap;
-//     retrieveUserLocations();
-        //       addMapMarkers();
         mMap.setOnInfoWindowClickListener(this);
     }
 
     private void analiz() {
-/*     Bundle bundle = new Bundle();
-     bundle.putString(FirebaseAnalytics.Param, id);
-     bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, name);
-     bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "image");
-     mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);*/
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        Bitmap img = null;
-        if (requestCode == REQUEST && resultCode == RESULT_OK) {
-            selectedImage = data.getData();
-            try {
-                img = MediaStore.Images.Media.getBitmap(getContentResolver(), selectedImage);
-                imageDialogUser.setImageBitmap(img);
-                uploadPickInFirestorage();
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    //to save in firebase storage, need to delete the previous picture +++
-    private void deletePhoroFromFirestorage(String uriPhoto) {
-        Log.d(LOG_TAG, "*** deletForoFromFirebase *** " + uriPhoto);
-
-        FirebaseStorage.getInstance().getReferenceFromUrl(uriPhoto).delete().addOnSuccessListener(new OnSuccessListener<Void>() {
-            @Override
-            public void onSuccess(Void aVoid) {
-                // File deleted successfully
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception exception) {
-                // Uh-oh, an error occurred!
-            }
-        });
-    }
-
-    //upload a picture to firebase storage and save new link to user data +++
-    private void uploadPickInFirestorage() {
-        showProgressDialog(getString(R.string.dialogProgressUpload));
-        //create link to picture
-        Log.d(LOG_TAG, "*** uploadPickInFirebaseTest *** ");
-        final StorageReference storageReference = FirebaseStorage.getInstance().getReference(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(selectedImage.getLastPathSegment());
-
-        UploadTask uploadTask = storageReference.putFile(selectedImage);
-        // Register observers to listen for when the download is done or if it fails
-        uploadTask.addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception exception) {
-                // Handle unsuccessful uploads
-                Log.d(LOG_TAG, "foto upload error ");
-            }
-        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-            @Override
-            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                if (!userData.getUserUriPhoto().contains("googleusercontent"))
-                    deletePhoroFromFirestorage(userData.getUserUriPhoto());
-            }
-        }).continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
-            @Override
-            public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
-                if (!task.isSuccessful()) {
-                    throw task.getException();
-                }
-                // Continue with the task to get the download URL
-                return storageReference.getDownloadUrl();
-            }
-        }).addOnCompleteListener(new OnCompleteListener<Uri>() {
-            @Override
-            public void onComplete(@NonNull Task<Uri> task) {
-                if (task.isSuccessful()) {
-                    Uri downloadUri = task.getResult();
-                    userData.setUserUriPhoto(downloadUri.toString());
-                    db.collection(Constants.ARG_USERS).document(userData.getUserId()).update(Constants.ARG_PHOTO, userData.getUserUriPhoto());
-
-                    Glide.with(MapsActivity.this)
-                            .setDefaultRequestOptions(requestOptions)
-                            .load(userData.getUserUriPhoto())
-                            .into(imageNavUser);
-
-                    Glide.with(MapsActivity.this)
-                            .setDefaultRequestOptions(requestOptions)
-                            .load(userData.getUserUriPhoto())
-                            .into(imageDialogUser);
-
-                    hideProgressDialog(getString(R.string.dialogProgressUploadFinish));
-
-                } else {
-                    hideProgressDialog(getString(R.string.dialogProgressUploadFinishError));
-                }
-            }
-        });
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, userData.getUserId());
+        bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, userData.getUserName());
+        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
     }
 
     //update user location
@@ -489,75 +308,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
-    //dialog delete user account +++
-    private void dialogDelAccount() {
-        AlertDialog.Builder adb = new AlertDialog.Builder(this);
-        adb.setCancelable(true);
-        adb.setMessage(R.string.dialogDelAccount);
-        adb.setPositiveButton(R.string.btnOK, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-                dialogSettings.dismiss();
-                deleteAccountFromFirebase();
-
-                Glide.with(MapsActivity.this)
-                        .setDefaultRequestOptions(requestOptions)
-                        .load("")
-                        .into(imageNavUser);
-
-
-                textNavUserName.setText("");
-                textNavUserMoto.setText("");
-                navSettingsUser.setVisibility(View.INVISIBLE);
-                deleteAccount.setTextColor(getResources().getColor(R.color.colorBlack));
-            }
-        });
-        adb.setNeutralButton(R.string.btnCancel, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-                deleteAccount.setTextColor(getResources().getColor(R.color.colorBlack));
-            }
-        });
-        adb.show();
-    }
-
-    //delete user account from firebase database *** проверить в relase
-    private void deleteAccountFromFirebase() {
-        //remove a picture
-        if (!userData.getUserUriPhoto().contains("googleusercontent"))
-            deletePhoroFromFirestorage(userData.getUserUriPhoto());
-
-        //remove a user data
-        FirebaseDatabase.getInstance().getReference().child(Constants.ARG_USERS).child(userData.getUserId()).removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
-            @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                if (task.isSuccessful()) {
-                    Log.d(LOG_TAG, " " + task.isSuccessful());
-                    Toast toast = Toast.makeText(getApplicationContext(), R.string.toastDelAccount, Toast.LENGTH_SHORT);
-                    toast.setGravity(Gravity.CENTER, 0, 0);
-                    toast.show();
-                } else {
-                    Toast.makeText(MapsActivity.this, R.string.toastDelAccountError, Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-
-        //remove an accont
-        FirebaseAuth.getInstance().getCurrentUser().delete().addOnCompleteListener(new OnCompleteListener<Void>() {
-            @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                if (task.isSuccessful()) {
-                    Log.d(LOG_TAG, " " + task.isSuccessful());
-                    Toast toast = Toast.makeText(getApplicationContext(), R.string.toastDelAccount, Toast.LENGTH_SHORT);
-                    toast.setGravity(Gravity.CENTER, 0, 0);
-                    toast.show();
-                } else {
-                    Toast.makeText(MapsActivity.this, R.string.toastDelAccountError, Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-    }
-
     //диалог инструкции +++
     public void dialogInstructions() {
         AlertDialog.Builder adb = new AlertDialog.Builder(this);
@@ -571,24 +321,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
         adb.show();
-    }
-
-    //start progress dialog  +++
-    private void showProgressDialog(String message) {
-        if (mProgressDialog == null) {
-            mProgressDialog = new ProgressDialog(this);
-            mProgressDialog.setMessage(message);
-            mProgressDialog.setIndeterminate(true);
-        }
-        mProgressDialog.show();
-    }
-
-    //stop progress dialog +++
-    private void hideProgressDialog(String message) {
-        if (mProgressDialog != null && mProgressDialog.isShowing()) {
-            mProgressDialog.dismiss();
-            Toast.makeText(MapsActivity.this, message, Toast.LENGTH_SHORT).show();
-        }
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
@@ -616,7 +348,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 break;
 
             case R.id.nav_about_program:
-                startActivity(new Intent(MapsActivity.this, AboutProgram.class));
+                Intent intentAboutProgram = new Intent(MapsActivity.this, AboutProgram.class);
+                intentAboutProgram.putExtra(UserData.class.getCanonicalName(), userData);
+                startActivity(intentAboutProgram);
                 break;
 
             case R.id.nav_feedback:
@@ -755,11 +489,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }
             }
             mClusterManager.cluster();
+            setCameraView();
         }
     }
 
     private void setCameraView() {
-        Log.d(LOG_TAG, "setCameraView");
+        Log.d(LOG_TAG, "setCameraView =" + userData.getUserGeoPoint().getLatitude());
         // Set a boundary to start
         double bottomBoundary = userData.getUserGeoPoint().getLatitude() - .1;
         double leftBoundary = userData.getUserGeoPoint().getLongitude() - .1;
@@ -815,61 +550,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if (marker.getSnippet().equals("This is you")) {
             marker.hideInfoWindow();
         } else {
-            dialogInfoContact(marker);
+            final int index = Integer.parseInt(marker.getId().replaceAll("[\\D]", ""));
+
+            Intent intent = new Intent(this, InfoUserActivity.class);
+            intent.putExtra(UserData.class.getCanonicalName(), mClusterMarkers.get(index).getUser());
+            intent.putExtra("name", userData.getUserName());
+            intent.putExtra("uid", userData.getUserId());
+            intent.putExtra("token", userData.getUserFirebaseToken());
+            startActivity(intent);
         }
-    }
-
-    private void dialogInfoContact(Marker marker) {
-        LayoutInflater adbInflater = LayoutInflater.from(MapsActivity.this);
-        View v = adbInflater.inflate(R.layout.dialog_info_user, null);
-        ImageView dialogImageUser = (ImageView) v.findViewById(R.id.imageUser);
-        TextView dialogNameUser = (TextView) v.findViewById(R.id.textNameUser);
-        TextView dialogMotoUser = (TextView) v.findViewById(R.id.textMotoUser);
-
-        final int index = Integer.parseInt(marker.getId().replaceAll("[\\D]", ""));
-
-        Log.d(LOG_TAG, "dialogInfoContact  " + index);
-
-        Glide.with(MapsActivity.this)
-                .setDefaultRequestOptions(requestOptions)
-                .load(mClusterMarkers.get(index).getUser().getUserUriPhoto())
-                .into(dialogImageUser);
-
-        dialogNameUser.setText(mClusterMarkers.get(index).getUser().getUserName());
-
-        dialogMotoUser.setText(marker.getSnippet());
-        AlertDialog.Builder adb = new AlertDialog.Builder(MapsActivity.this);
-        adb.setCancelable(true);
-        adb.setView(v);
-        adb.setIcon(android.R.drawable.ic_input_add);
-        adb.setPositiveButton(R.string.btnContact, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int which) {
-                Log.d(LOG_TAG, "tokenSender  " + userData.getUserFirebaseToken());
-                Log.d(LOG_TAG, "tokenReceiver  " + mClusterMarkers.get(index).getUser().getUserFirebaseToken());
-                Chat chat = new Chat(userData.getUserName(), userData.getUserId(), userData.getUserFirebaseToken(), mClusterMarkers.get(index).getUser().getUserName(), mClusterMarkers.get(index).getUser().getUserId(), mClusterMarkers.get(index).getUser().getUserFirebaseToken());
-                ChatActivity.startActivity(MapsActivity.this, chat);
-
-              /*  ChatActivity.startActivity(MapsActivity.this,
-                        userData.getUserName(),
-                        userData.getUserId(),
-                        userData.getUserFirebaseToken(),
-                        mClusterMarkers.get(index).getUser().getUserName(),
-                        mClusterMarkers.get(index).getUser().getUserId(),
-                        mClusterMarkers.get(index).getUser().getUserFirebaseToken());*/
-                dialog.dismiss();
-            }
-        });
-        adb.setNegativeButton(R.string.btnWay, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int which) {
-            /*    String lat = String.valueOf(user.getUserLocation().getLatitude());
-                String lon = String.valueOf(user.getUserLocation().getLongitude());
-                Uri gmmIntentUri = Uri.parse("google.navigation:q=" + lat + "," + lon + "&mode=d&avoid=h");
-                Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
-                mapIntent.setPackage("com.google.android.apps.maps");
-                startActivity(mapIntent);*/
-                dialog.dismiss();
-            }
-        });
-        adb.show();
     }
 }

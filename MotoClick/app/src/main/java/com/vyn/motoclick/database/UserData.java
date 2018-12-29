@@ -8,6 +8,7 @@ import com.google.firebase.firestore.GeoPoint;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 
 public class UserData implements Parcelable, Comparator<UserData> {
@@ -104,21 +105,31 @@ public class UserData implements Parcelable, Comparator<UserData> {
         dest.writeString(this.userId);
         dest.writeString(this.userName);
         dest.writeString(this.userUriPhoto);
-        //  dest.writeString(this.userGeoPoint);
+
         dest.writeInt(this.userTypeVehicle);
         dest.writeString(this.userFirebaseToken);
         dest.writeList(this.userListContacts);
+
+        dest.writeDouble(userGeoPoint.getLatitude());
+        dest.writeDouble(userGeoPoint.getLongitude());
+
+        dest.writeString(userTimeStamp.toDate().toString());
+
     }
 
     protected UserData(Parcel in) {
         this.userId = in.readString();
         this.userName = in.readString();
         this.userUriPhoto = in.readString();
-//      this.userGeoPoint = in.readString();
+
         this.userTypeVehicle = in.readInt();
         this.userFirebaseToken = in.readString();
         userListContacts = new ArrayList<String>();
         in.readList(userListContacts, null);
+
+        this.userGeoPoint = new GeoPoint(in.readDouble(), in.readDouble());
+
+        this.userTimeStamp = new Timestamp(new Date(in.readString()));
     }
 
     public static final Parcelable.Creator<UserData> CREATOR = new Parcelable.Creator<UserData>() {

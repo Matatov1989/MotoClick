@@ -94,7 +94,12 @@
             android:enabled="true"
             android:exported="true" />
 
-        <activity android:name=".activities.ContactsActivity"></activity>
+        <activity android:name=".activities.ContactsActivity" />
+        <activity
+            android:name=".activities.InfoUserActivity"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity android:name=".activities.EditProfileActivity"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
 </manifest>

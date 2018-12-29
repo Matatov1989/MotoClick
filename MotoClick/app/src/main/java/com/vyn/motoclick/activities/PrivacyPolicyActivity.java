@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.webkit.WebView;
 
 import com.vyn.motoclick.R;
+import com.vyn.motoclick.database.UserData;
 
 /**
  * Created by Yurka on 21.06.2017.
@@ -32,8 +33,11 @@ public class PrivacyPolicyActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        if (flagExit.equals("maps"))
-            startActivity(new Intent(PrivacyPolicyActivity.this, MapsActivity.class));
+        if (flagExit.equals("maps")) {
+            Intent intentMaps = new Intent(PrivacyPolicyActivity.this, MapsActivity.class);
+            intentMaps.putExtra(UserData.class.getCanonicalName(), (UserData) getIntent().getParcelableExtra(UserData.class.getCanonicalName()));
+            startActivity(intentMaps);
+        }
         else if (flagExit.equals("aboutProgram"))
             startActivity(new Intent(PrivacyPolicyActivity.this, AboutProgram.class));
     }

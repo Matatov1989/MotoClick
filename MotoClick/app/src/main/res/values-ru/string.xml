@@ -77,7 +77,6 @@
     <string name="navMessages">Сообщения</string>
 
 
-
     <string name="dialogProgressAuth">Пожалуйста подождите\nзавершения авторизации.</string>
     <string name="dialogProgressAuthFinish">Авторизация завершена</string>
     <string name="dialogProgressAuthFinishError">Во время авторизации произошла ошибка. Попробуйте еще раз.</string>
@@ -116,5 +115,19 @@
     <string name="worker3">Юрка Мататов</string>
 
     <string name="title_activity_chat2">ChatActivity2</string>
+
+    <!-- new -->
+
+    <array name="arrTypeVehicle">
+        <item>Коляски</item>
+        <item>Мотоцикла</item>
+        <item>Автомобиля</item>
+        <item>Грузовика</item>
+        <item>SOS</item>
+    </array>
+
+    <string name="textTypeVehicle">Водитель %1$s</string>
+    <string name="textLastVisit">Последний визит: %1$s</string>
+
 
 </resources>

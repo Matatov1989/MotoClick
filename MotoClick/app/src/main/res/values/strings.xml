@@ -114,4 +114,17 @@
     <string name="worker3">Yury Matatov</string>
     <string name="title_activity_chat2">ChatActivity2</string>
 
+
+    <!-- new -->
+    <array name="arrTypeVehicle">
+        <item>Stroller</item>
+        <item>Moto</item>
+        <item>Car</item>
+        <item>Truck</item>
+        <item>SOS</item>
+    </array>
+
+    <string name="textTypeVehicle">%1$s driver</string>
+    <string name="textLastVisit">Last visit: %1$s</string>
+
 </resources>

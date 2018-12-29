@@ -17,6 +17,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.vyn.motoclick.R;
 import com.vyn.motoclick.database.Chat;
+import com.vyn.motoclick.database.UserData;
 import com.vyn.motoclick.fragments.ChatFragment;
 import com.vyn.motoclick.utils.Constants;
 
@@ -32,6 +33,7 @@ public class ChatActivity extends AppCompatActivity {
     final String LOG_TAG = "myLogs";
     private Toolbar mToolbar;
 
+
     public static void startActivity(Context context, String receiver, String receiverUid, String receiverToken, String senderToken) {
         Intent intent = new Intent(context, ChatActivity.class);
         intent.putExtra(Constants.ARG_RECEIVER, receiver);
@@ -41,7 +43,7 @@ public class ChatActivity extends AppCompatActivity {
         context.startActivity(intent);
     }
 
-    public  static  void startActivity(Context context, Chat chat){
+    public static void startActivity(Context context, Chat chat, UserData userData) {
         Intent intent = new Intent(context, ChatActivity.class);
 
         intent.putExtra(Constants.ARG_SENDER, chat.getSenderName());
@@ -51,6 +53,8 @@ public class ChatActivity extends AppCompatActivity {
         intent.putExtra(Constants.ARG_RECEIVER, chat.getReceiverName());
         intent.putExtra(Constants.ARG_RECEIVER_UID, chat.getReceiverUid());
         intent.putExtra(Constants.ARG_RECEIVER_TOKEN, chat.getReceiverToken());
+
+        intent.putExtra(UserData.class.getCanonicalName(), userData);
 
         context.startActivity(intent);
     }
@@ -72,7 +76,6 @@ public class ChatActivity extends AppCompatActivity {
 
 //        resetCntMsgFirebase(Constants.ARG_RECEIVER_UID);
     }
-
 
 
     private void bindViews() {
@@ -106,18 +109,20 @@ public class ChatActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        //      MainActivity1.setChatActivityOpen(true);
+        MapsActivity.setChatActivityOpen(true);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        //     MainActivity1.setChatActivityOpen(false);
+        MapsActivity.setChatActivityOpen(false);
     }
 
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        startActivity(new Intent(ChatActivity.this, MapsActivity.class));
+        Intent intent = new Intent(ChatActivity.this, MapsActivity.class);
+        intent.putExtra(UserData.class.getCanonicalName(), (UserData) getIntent().getParcelableExtra(UserData.class.getCanonicalName()));
+        startActivity(intent);
     }
 }

@@ -11,7 +11,8 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.vyn.motoclick.R;
-import com.vyn.motoclick.database.ContactData;
+import com.vyn.motoclick.activities.ChatActivity;
+import com.vyn.motoclick.database.Chat;
 import com.vyn.motoclick.database.UserData;
 
 import java.util.ArrayList;
@@ -20,10 +21,12 @@ public class ContactsRecyclerAdapter extends RecyclerView.Adapter<ContactsRecycl
 
     private Context context;
     private ArrayList<UserData> arrayListContact;
+    private UserData userData;
 
-    public ContactsRecyclerAdapter(Context context, ArrayList<UserData> arrayListContact) {
+    public ContactsRecyclerAdapter(Context context, ArrayList<UserData> arrayListContact, UserData userData) {
         this.context = context;
         this.arrayListContact = arrayListContact;
+        this.userData = userData;
     }
 
     @Override
@@ -80,7 +83,8 @@ public class ContactsRecyclerAdapter extends RecyclerView.Adapter<ContactsRecycl
 
         @Override
         public void onClick(View v) {
-
+            Chat chat = new Chat(userData.getUserName(), userData.getUserId(), userData.getUserFirebaseToken(), arrayListContact.get(getAdapterPosition()).getUserName(), arrayListContact.get(getAdapterPosition()).getUserId(), arrayListContact.get(getAdapterPosition()).getUserFirebaseToken());
+            ChatActivity.startActivity(context, chat, userData);
         }
 
         @Override

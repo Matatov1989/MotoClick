@@ -15,7 +15,6 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.vyn.motoclick.database.Chat;
-import com.vyn.motoclick.database.ContactData;
 import com.vyn.motoclick.fcm.FcmNotificationBuilder;
 import com.vyn.motoclick.utils.Constants;
 import com.vyn.motoclick.utils.SharedPrefUtil;
@@ -147,7 +146,7 @@ public class ChatInteractor implements ChatContract.Interactor {
 /*
         //    final UserData userData = new UserData(firebaseUser.getUid(), firebaseUser.getDisplayName(), firebaseUser.getPhotoUrl().toString(), locationData, new SharedPrefUtil(getBaseContext()).getString(Constants.ARG_TOKEN));
 
-        ContactData constant = new ContactData(chatId, sendeId, flagMsg);
+
 
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
         databaseReference.child(Constants.ARG_USERS)

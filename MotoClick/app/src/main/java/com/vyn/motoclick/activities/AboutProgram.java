@@ -11,6 +11,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.vyn.motoclick.R;
+import com.vyn.motoclick.database.UserData;
 
 /**
  * Created by Yurka on 01.07.2017.
@@ -139,6 +140,8 @@ public class AboutProgram extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        startActivity(new Intent(AboutProgram.this, MapsActivity.class));
+        Intent intent = new Intent(AboutProgram.this, MapsActivity.class);
+        intent.putExtra(UserData.class.getCanonicalName(), (UserData) getIntent().getParcelableExtra(UserData.class.getCanonicalName()));
+        startActivity(intent);
     }
 }
